@@ -1,0 +1,14 @@
+# Ignore all sound files in the sounds folder
+sounds/
+
+# But keep the folder structure
+!sounds/.gitkeep
+
+# Ignore saved variables
+*.lua.bak
+*.bak
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db

@@ -1,18 +1,13 @@
--- ═════════════════════════
--- ██╗ ██╗    ██╗ ██████╗ 
--- ╚═╝ ██║    ██║ ██╔══██╗
--- ██║ ██║ █╗ ██║ ██████╔╝
--- ██║ ██║███╗██║ ██  ██╔
--- ██║ ╚███╔███╔╝ ██   ██╗ 
--- ╚═╝  ╚══╝╚══╝  ╚══════╝ 
--- ═════════════════════════
+local addonName, addon = ...
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                     Colors                                     │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
 local Colors = {
+    -- Addon Brand Color
+    iSP = "|cffff9716",
+
     -- Standard Colors
-    iWR = "|cffff9716",
     White = "|cFFFFFFFF",
     Black = "|cFF000000",
     Red = "|cFFFF0000",
@@ -23,6 +18,7 @@ local Colors = {
     Magenta = "|cFFFF00FF",
     Orange = "|cFFFFA500",
     Gray = "|cFF808080",
+    DarkGray = "|cFF404040",
 
     -- WoW Class Colors
     Classes = {
@@ -45,122 +41,184 @@ local Colors = {
     Reset = "|r"
 }
 
-local L = LibStub("AceLocale-3.0"):NewLocale("iWR", "enUS", true)
-local DefaultMessageStart = Colors.iWR .. "[iWR]: "
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                           Localization Table Setup                             │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+local L = {}
+addon.L = L
+addon.Colors = Colors
+
+-- Fallback: Return key if translation missing
+setmetatable(L, {__index = function(t, k)
+    return k
+end})
+
+-- Helper function for consistent message formatting
 local function Msg(message)
-    return DefaultMessageStart .. message
+    return Colors.iSP .. "[iSP]: " .. Colors.Reset .. message
 end
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
--- │                                 Text Templates                                 │
+-- │                                 Debug Messages                                 │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
-L["NoteToolTip"] = Colors.iWR .. "[iWR]: "
-L["DefaultNameInput"] = "Enter player name..."
-L["DefaultNoteInput"] = "Enter note..."
-L["MinimapButtonLeftClick"] = (Colors.Yellow .. "Left Click: " .. Colors.Orange .. "Open iWR Menu")
-L["MinimapButtonShiftLeftClick"] = (Colors.Yellow .. "Shift-Left Click: " .. Colors.Orange .. "Open iWR Database")
-L["MinimapButtonRightClick"] = (Colors.Yellow .. "Right Click: " .. Colors.Orange .. "Open Settings")
-L["CharNoteCreated"] = Colors.iWR .."] added to the iWR Database.|r"
-L["CharNoteUpdated"] = Colors.iWR .."] was updated in the iWR Database.|r"
-L["CharNoteRemoved"] = Colors.iWR .."] was removed from the iWR Database.|r"
-L["CharNoteClassMissing"] = " Class information is missing, will be added the next time player is targeted."
-L["CharNoteColorUpdate"] = Colors.iWR .."] was found with missing class information in the iWR Database. Class color was added to the iWR Database."
-L["Translations"] = "Translations"
-L["DiscordLinkMessage"] = "Copy this link to join our Discord for support and updates."
-L["CreatedBy"] = "Created by: " 
-L["AboutMessageInfo"] = Colors.iWR .. "iWillRemember " .. Colors.Reset .. "is an addon designed to help you track and easily share player notes with friends."
-L["AboutMessageEarlyDev"] = Colors.iWR .. "iWR " .. Colors.Reset .. "is in early development. Join the Discord for help with issues, questions, or suggestions."
-L["Tab1General"] = "General"
-L["Tab2Sync"] = "Sync"
-L["Tab3Backup"] = "Backup"
-L["Tab4About"] = "About"
-L["NoBackup"] = "No Backup Available"
-L["LastBackup1"] = "Last Backup: "
-L["at"] = " at "
-L["BackupRestoreError"] = Colors.Red .. "[iWR]: No backup found to restore."
-L["BackupRestore"] = Colors.iWR .. "[iWR]: Database restored from backup made on "
-L["RestoreConfirm"] = Colors.Red .. "Are you sure you want to overwrite the current iWR Database with the backup data?|nThis is non-reversible.\n\nBackup made on "
-L["UnknownDate"] = "Unknown Date"
-L["UnknownTime"] = "Unknown Time"
-L["Yes"] = "Yes"
-L["No"] = "No"
-L["RestoreDatabase"] = "Restore Database"
-L["EnableBackup"] = "Enable Automatic Backup"
-L["WhiteListTitle"] = Colors.iWR .. "Whitelist"
-L["AddtoWhitelist"] = Colors.iWR .. "Add friends to whitelist:"
-L["Friends"] = "Friends"
-L["AllFriends"] ="All Friends"
-L["Whitelist"] = "Whitelist"
-L["OnlyWhitelist"] = "Only Whitelist"
-L["EnableSync"] = "Enable Sync with Friends"
-L["SyncSettings"] = Colors.iWR .. "Sync Settings"
-L["ShowAuthor"] = "Show Author on Tooltip"
-L["ToolTipSettings"] = Colors.iWR .. "Tooltip Settings"
-L["EnableSoundWarning"] = "Enable Sound Warnings"
-L["EnableGroupWarning"] = "Enable Group Warnings"
-L["WarningSettings"] = Colors.iWR .. "Warning Settings"
-L["ShowChatIcons"] = "Show Chat Icons"
-L["EnhancedFrame"] = "Show Enhanced TargetFrame"
-L["DisplaySettings"] = Colors.iWR .. "Display Settings"
-L["SettingsTitle"] = Colors.iWR .." Options"
-L["VersionWarning"] = Colors.iWR .. "[iWR]: " .. Colors.Yellow.. "WARNING" .. Colors.iWR .. ": This is an alpha version and can be unstable and cause issues with your database. If you do not want to run this version, please downgrade to the latest release."
-L["DBNameNotFound1"] = Colors.iWR .. "[iWR]: Name [|r"
-L["DBNameNotFound2"] = Colors.iWR .. "] does not exist in the database."
-
-L["HelpSync"] = Colors.Yellow .. "How to sync: " .. Colors.iWR .. "Add your friends in the social panel in-game, It will not share to Battle.Net friends(REAL ID), only the friends added to the World of Warcraft friendslist, and you both need to add each other for sync to go through."
-L["HelpUse"] = Colors.Yellow .. "How to use: " .. Colors.iWR .. "Target a player or write their name manually, optionally add a note and then press Respected, Liked, Disliked or Hated to save the player in the database"
-L["HelpClear"] = Colors.Yellow .. "How to clear: " .. Colors.iWR .. "When pressing the Clear button the name in the player name text box will be removed from the database, you can also remove them from the database using the remove button, or just edit it from the database."
-L["HelpSettings"] = Colors.Yellow .. "Settings Menu: " .. Colors.iWR .. "Right clicking the minimap icon to open settings menu."
-L["HelpDiscord"] = Colors.Yellow .."Help Discord: " .. Colors.iWR .. "Click the Question Mark Button without a player name to put code in the note field to be able to copy [https://discord.gg/8nnt25aw8B]"
-
-L["Russian"] = "Russian"
+L["PrintPrefix"] = Colors.iSP .. "[iSP]: "
+L["DebugPrefix"] = Colors.iSP .. "[iSP]: "
+L["DebugInfo"] = Colors.iSP .. "[iSP]: " .. Colors.White .. "INFO: " .. Colors.Reset .. Colors.iSP
+L["DebugWarning"] = Colors.iSP .. "[iSP]: " .. Colors.Yellow .. "WARNING: " .. Colors.Reset .. Colors.iSP
+L["DebugError"] = Colors.iSP .. "[iSP]: " .. Colors.Red .. "ERROR: " .. Colors.Reset .. Colors.iSP
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
--- │                           Options Panel Descriptions                           │
+-- │                                 General Messages                               │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
-L["OptionsPanelSubtitle"] = "|cFF808080Track and share player notes with friends.|r"
-L["DescEnhancedFrame"] = "|cFF808080Displays a colored border overlay on target frames for tracked players.|r"
-L["DescShowChatIcons"] = "|cFF808080Shows reputation icons next to tracked player names in chat messages.|r"
-L["DescEnableGroupWarning"] = "|cFF808080Alerts you when a group or raid contains players with negative ratings.|r"
-L["DescEnableSoundWarning"] = "|cFF808080Plays an audible notification alongside group warning popups.|r"
-L["DescShowAuthor"] = "|cFF808080Displays who created the note when hovering over a tracked player.|r"
-L["MinimapSettings"] = Colors.iWR .. "Minimap Settings"
-L["ShowMinimapButton"] = "Show Minimap Button"
-L["DescShowMinimapButton"] = "|cFF808080Toggles visibility of the iWillRemember minimap button.|r"
-L["DescEnableSync"] = "|cFF808080Shares your database with friends who also have iWillRemember installed. Both players must be on each other's friend list.|r"
-L["DescEnableBackup"] = "|cFF808080Automatically creates a backup of your database every hour.|r"
-L["DatabaseStats"] = Colors.iWR .. "Database Statistics"
-L["ResetSettingsHeader"] = Colors.iWR .. "Reset"
-L["ResetToDefaults"] = "Reset Settings to Defaults"
-L["ResetConfirm"] = "Are you sure you want to reset all settings to their default values?\n\nYour player database will NOT be affected."
-L["SettingsResetSuccess"] = Msg("Settings reset to defaults. Type /reload to apply.")
-L["ButtonLabelsSettings"] = Colors.iWR .. "Button Labels"
-L["DescButtonLabels"] = "|cFF808080Customize the text displayed for each rating. Changes apply to buttons, tooltips, warnings and all displays.|r"
-L["ResetLabels"] = "Reset Labels to Defaults"
-L["Tab5Customize"] = "Customize"
-L["DescCustomizeInfo"] = "|cFF808080All changes on this page are local and visual only. They will not be synced to other players or affect your shared data.|r"
-L["CustomIconsSettings"] = Colors.iWR .. "Custom Icons"
-L["DescCustomIcons"] = "|cFF808080Choose custom icons for each rating. Changes apply to buttons, tooltips, and database displays.|r"
-L["ChangeIcon"] = "Change"
-L["ResetIcon"] = "Reset"
-L["SelectIcon"] = "Select Icon"
-L["IconPathHelpInline"] = "Enter icon path, e.g. Interface\\Icons\\Spell_Fire_Fire - find names at wowhead.com"
+L["AddonLoaded"] = Msg(Colors.iSP .. "iSoundPlayer" .. Colors.Green .. " v%s" .. Colors.Reset .. " loaded!")
+L["AddonEnabled"] = Msg("Addon enabled")
+L["AddonDisabled"] = Msg("Addon disabled")
 
-L["iWRLoaded"] = Msg("iWillRemember")
-L["iWRWelcomeStart"] = Msg("Thank you ")
-L["iWRWelcomeEnd"] = Colors.iWR .. (" for being part of the development of iWillRemember, if you get into any issues please reach out on CurseForge in the comment section or Discord.")
-L["DiscordCopiedToNote"] = Msg("Discord link was copied to note field.")
-L["DiscordLink"] = ("https://discord.gg/8nnt25aw8B")
-L["InCombat"] = Msg("Cannot be used in combat.")
-L["CharNoteStart"] = Msg("Character note [")
-L["DebugError"] = Msg(Colors.Red .. "ERROR: " .. Colors.iWR)
-L["DebugWarning"] = Msg(Colors.Yellow .. "WARNING: " .. Colors.iWR)
-L["DebugInfo"] = Msg(Colors.White .. "INFO: " .. Colors.iWR)
-L["NameInputError"] = Msg("Unable to add player: The name contains invalid characters or is empty. Please remove spaces, numbers, or special symbols and try again.")
-L["ClearInputError"] = Msg("Unable to clear player: The name contains invalid characters or is empty. Please remove spaces, numbers, or special symbols and try again.")
-L["GroupWarning"] = Msg((Colors.Red .. "Warning: Database Matches in group.|r"))
-L["NewVersionAvailable"] = Msg("A new version is available on CurseForge.")
-L["FullDBSendSuccess"] = Msg("Database successfully sent to: ")
-L["FullDBRetrieve"] = Msg("Estimated time for full database retrieval: ")
-L["FullDBRetrieveSuccess"] = Msg("Successfully synced data from: ")
-L["WhitelistFriendsAdded"] = Msg("Missing whitelisted friends on this realm were automatically added to friendslist.")
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                                  Sound Messages                                │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["SoundPlaying"] = Msg("Playing sound: " .. Colors.Yellow .. "%s" .. Colors.Reset)
+L["SoundTesting"] = Msg("Testing sound: " .. Colors.Yellow .. "%s" .. Colors.Reset)
+L["SoundFailed"] = Msg(Colors.Red .. "Failed to play sound: %s" .. Colors.Reset)
+L["SoundAdded"] = Msg(Colors.Green .. "Added sound: %s" .. Colors.Reset)
+L["SoundAlreadyExists"] = Msg(Colors.Yellow .. "Sound already in list!" .. Colors.Reset)
+L["SoundRemoved"] = Msg(Colors.Red .. "Removed sound: %s" .. Colors.Reset)
+L["NoSoundSpecified"] = Msg(Colors.Red .. "No sound file specified!" .. Colors.Reset)
+L["EnterFilenameFirst"] = Msg(Colors.Red .. "Enter a filename first!" .. Colors.Reset)
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                               Trigger Messages                                 │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["TriggerActivated"] = Msg("Trigger activated: " .. Colors.Yellow .. "%s" .. Colors.Reset)
+L["TriggerDisabled"] = Msg("Trigger " .. Colors.Yellow .. "%s" .. Colors.Reset .. " is disabled")
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                                Options Panel - Tabs                            │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["Tab1General"] = "General"
+L["Tab2Sounds"] = "Sounds"
+L["Tab3Triggers"] = "Triggers"
+L["Tab4About"] = "About"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                            Options Panel - General Tab                         │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["GeneralSettings"] = Colors.iSP .. "General Settings"
+L["EnableAddon"] = "Enable iSoundPlayer"
+L["DescEnableAddon"] = "Enable or disable the entire addon"
+L["ShowNotifications"] = "Show Notifications"
+L["DescShowNotifications"] = "Display chat messages when sounds are played"
+L["MinimapSettings"] = Colors.iSP .. "Minimap Button"
+L["ShowMinimapButton"] = "Show Minimap Button"
+L["DescShowMinimapButton"] = "Show or hide the minimap button"
+L["ResetSettings"] = Colors.iSP .. "Reset Settings"
+L["ResetToDefaults"] = "Reset to Defaults"
+L["ResetConfirm"] = "Reset all settings to defaults?"
+L["SettingsResetSuccess"] = Msg(Colors.Green .. "Settings reset to defaults!" .. Colors.Reset)
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                            Options Panel - Sounds Tab                          │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["SoundFiles"] = Colors.iSP .. "Sound Files"
+L["SoundFilesInfo"] = Colors.Gray .. "Place your MP3 or OGG files in the 'sounds' folder inside the addon directory.\n\nPath: " .. Colors.White .. "Interface\\AddOns\\iSoundPlayer\\sounds\\\n\n" .. Colors.Red .. "IMPORTANT: " .. Colors.Gray .. "You must restart WoW after adding new sound files!" .. Colors.Reset
+L["AddSoundFile"] = Colors.iSP .. "Add Sound File"
+L["FilenameLabel"] = "Filename (e.g., mysound.mp3):"
+L["AddSound"] = "Add Sound"
+L["TestSound"] = "Test Sound"
+L["RegisteredSounds"] = Colors.iSP .. "Registered Sounds"
+L["NoSoundsRegistered"] = Colors.Gray .. "No sound files registered yet." .. Colors.Reset
+L["RemoveSound"] = "Remove"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                           Options Panel - Triggers Tab                         │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["Triggers"] = Colors.iSP .. "Triggers"
+L["TriggersInfo"] = Colors.Gray .. "Configure when sounds should play. Connect in-game events to your sound files." .. Colors.Reset
+L["AvailableTriggers"] = Colors.iSP .. "Available Triggers"
+L["EnableTrigger"] = "Enable"
+L["SelectSound"] = "Select Sound..."
+L["NoSound"] = "No Sound"
+
+-- Trigger Names
+L["TriggerPlayerLogin"] = "Player Login"
+L["TriggerPlayerLevelUp"] = "Level Up"
+L["TriggerPlayerDead"] = "Player Death"
+L["TriggerEnterCombat"] = "Enter Combat"
+L["TriggerExitCombat"] = "Exit Combat"
+L["TriggerAchievement"] = "Achievement"
+L["TriggerQuestComplete"] = "Quest Complete"
+
+-- PvP Trigger Names
+L["TriggerPvPHonorableKill"] = "Honorable Kill"
+L["TriggerPvPDoubleKill"] = "Double Kill"
+L["TriggerPvPTripleKill"] = "Triple Kill"
+L["TriggerPvPMultiKill"] = "Multi Kill"
+L["TriggerPvPKillingSpree"] = "Killing Spree"
+L["TriggerPvPDominating"] = "Dominating"
+L["TriggerPvPUnstoppable"] = "Unstoppable"
+L["TriggerPvPGodlike"] = "Godlike"
+
+-- Trigger Descriptions
+L["DescTriggerPlayerLogin"] = "When you log into the game"
+L["DescTriggerPlayerLevelUp"] = "When you gain a level"
+L["DescTriggerPlayerDead"] = "When your character dies"
+L["DescTriggerEnterCombat"] = "When you enter combat"
+L["DescTriggerExitCombat"] = "When you exit combat"
+L["DescTriggerAchievement"] = "When you earn an achievement"
+L["DescTriggerQuestComplete"] = "When you complete a quest"
+
+-- PvP Trigger Descriptions
+L["DescTriggerPvPHonorableKill"] = "When you get an honorable kill"
+L["DescTriggerPvPDoubleKill"] = "When you kill 2 players within 10 seconds"
+L["DescTriggerPvPTripleKill"] = "When you kill 3 players within 10 seconds"
+L["DescTriggerPvPMultiKill"] = "When you kill 4+ players within 10 seconds"
+L["DescTriggerPvPKillingSpree"] = "When you reach 5 kills without dying"
+L["DescTriggerPvPDominating"] = "When you reach 10 kills without dying"
+L["DescTriggerPvPUnstoppable"] = "When you reach 15 kills without dying"
+L["DescTriggerPvPGodlike"] = "When you reach 20+ kills without dying"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                            Options Panel - About Tab                           │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["About"] = Colors.iSP .. "About"
+L["CreatedBy"] = "Created by "
+L["AboutInfo"] = "Play custom MP3 files at specific triggers in World of Warcraft.\n\nEarly development version."
+L["Developer"] = Colors.iSP .. "Developer"
+L["EnableDebugMode"] = "Enable Debug Mode"
+L["DescDebugMode"] = Colors.Gray .. "Enables verbose debug messages in chat." .. Colors.Reset
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                            Advanced Sound Options                              │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["AdvancedOptions"] = Colors.iSP .. "Advanced Options"
+L["Duration"] = "Duration (seconds)"
+L["DescDuration"] = Colors.Gray .. "How long to play the sound. 0 = full sound" .. Colors.Reset
+L["StartOffset"] = "Start Delay (seconds)"
+L["DescStartOffset"] = Colors.Gray .. "Delay before playing. Note: Cannot seek into audio file" .. Colors.Reset
+L["Loop"] = "Loop Sound"
+L["DescLoop"] = Colors.Gray .. "Repeat the sound playback" .. Colors.Reset
+L["LoopCount"] = "Loop Count"
+L["DescLoopCount"] = Colors.Gray .. "How many times to repeat (1 = once, 2 = twice, etc.)" .. Colors.Reset
+L["FadeIn"] = "Fade In"
+L["DescFadeIn"] = Colors.Gray .. "Gradually increase volume (not supported by WoW API)" .. Colors.Reset
+L["FadeOut"] = "Fade Out"
+L["DescFadeOut"] = Colors.Gray .. "Gradually decrease volume (not supported by WoW API)" .. Colors.Reset
+L["StopSound"] = "Stop Sound"
+L["StopAllSounds"] = "Stop All Sounds"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                                 Popup Dialogs                                  │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["Yes"] = "Yes"
+L["No"] = "No"
+L["Confirm"] = "Confirm"
+L["Cancel"] = "Cancel"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                                Slash Commands                                  │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["SlashHelp"] = Colors.iSP .. "iSoundPlayer " .. Colors.White .. "v%s\n" ..
+                Colors.Yellow .. "Commands:\n" ..
+                Colors.Green .. "  /isp settings" .. Colors.White .. " - Open settings\n" ..
+                Colors.Green .. "  /isp enable" .. Colors.White .. " - Enable addon\n" ..
+                Colors.Green .. "  /isp disable" .. Colors.White .. " - Disable addon"
