@@ -6,7 +6,7 @@ This folder is where you place your custom sound files for iSoundPlayer.
 
 1. Place your `.mp3` or `.ogg` sound files in this folder
 2. The sound files will be available in-game for use with iSoundPlayer triggers
-3. Reference them in your triggers using the path: `Interface\\AddOns\\iSoundPlayer\\Sounds\\YourFileName.mp3`
+3. Reference them in your triggers using the path: `YourFileName.mp3`
 
 ## Supported Formats
 
@@ -17,7 +17,7 @@ This folder is where you place your custom sound files for iSoundPlayer.
 
 If you add a file named `alert.mp3` to this folder, you can use it in iSoundPlayer by referencing:
 ```
-Interface\AddOns\iSoundPlayer\Sounds\alert.mp3
+alert.mp3
 ```
 
 ## Tips
