@@ -17,6 +17,51 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.2.1 - Version bump
+═══════════════════════════════════════════════════════════
+
+[IMPROVED]
+- Minimap tooltip reformatted to match iWR/iNIF style (Yellow/Orange colors, SetText, Status line)
+- Added L["StatusEnabled"], L["StatusDisabled"], L["MinimapTooltipStatus"] locale keys
+
+═══════════════════════════════════════════════════════════
+Version 0.1.7 - Combat Protection & ESC Close
+═══════════════════════════════════════════════════════════
+
+[IMPROVED]
+- Settings panel and Setup Guide auto-hide when entering combat
+- Setup Guide window now closes with ESC key (UISpecialFrames)
+
+═══════════════════════════════════════════════════════════
+Version 0.1.6 - Localization (Minimap & Setup Guide)
+═══════════════════════════════════════════════════════════
+
+[IMPROVED]
+- Minimap tooltip text moved to locale tags (~6 strings)
+- Setup Guide text moved to locale tags (~12 strings: headers, steps, tips, buttons)
+- Minimap show/hide messages moved to locale tags
+
+═══════════════════════════════════════════════════════════
+Version 0.1.5 - Localization
+═══════════════════════════════════════════════════════════
+
+[IMPROVED]
+- Moved all hardcoded UI strings in options panel to locale tags (L["key"])
+- Added ~40 new locale keys for section headers, buttons, descriptions, and messages
+- Static popup dialogs, sounds tab, triggers tab, about tab, and other addons tabs all use L-tags
+- Consistent use of local L and Colors shortcuts throughout options panel
+
+═══════════════════════════════════════════════════════════
+Version 0.1.4 - UI Consistency
+═══════════════════════════════════════════════════════════
+
+[FIXED]
+- Settings panel frame border now matches iWR/iNIF style (thinner border, correct insets)
+- Title bar text centered to match iWR/iNIF (was left-aligned with icon)
+- ESC key now closes settings panel via UISpecialFrames
+- Opening iSP settings now auto-closes iWR/iNIF settings panels if open
+
+═══════════════════════════════════════════════════════════
 Version 0.1.2.0 - Setup Guide & First-Time Experience
 ═══════════════════════════════════════════════════════════
 

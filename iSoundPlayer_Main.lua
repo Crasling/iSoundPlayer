@@ -539,6 +539,14 @@ local function OnEvent(self, event, ...)
         iSP:OnPlayerLogin()
     elseif event == "PLAYER_REGEN_DISABLED" then
         iSP.State.InCombat = true
+        -- Auto-hide settings and setup guide on combat enter
+        if iSP.SettingsFrame and iSP.SettingsFrame:IsShown() then
+            iSP.SettingsFrame:Hide()
+        end
+        local setupGuide = _G["iSPSetupGuide"]
+        if setupGuide and setupGuide:IsShown() then
+            setupGuide:Hide()
+        end
         iSP:PlayTriggerSound("PLAYER_REGEN_DISABLED")
     elseif event == "PLAYER_REGEN_ENABLED" then
         iSP.State.InCombat = false
@@ -777,20 +785,16 @@ function iSP:CreateMinimapButton()
         end,
         OnTooltipShow = function(tooltip)
             if not tooltip or not tooltip.AddLine then return end
-            tooltip:AddLine(Colors.iSP .. "iSoundPlayer|r " .. Colors.Green .. "v" .. iSP.Version .. "|r")
-            tooltip:AddLine(" ")
-            tooltip:AddLine(Colors.White .. "Left-click:|r Setup Guide")
-            tooltip:AddLine(Colors.White .. "Right-click:|r Settings")
-            tooltip:AddLine(" ")
-            if iSPSettings.Enabled then
-                tooltip:AddLine(Colors.Green .. "✓ Addon Enabled|r")
-            else
-                tooltip:AddLine(Colors.Red .. "✗ Addon Disabled|r")
-            end
+            tooltip:SetText(Colors.iSP .. "iSoundPlayer" .. Colors.Green .. " v" .. iSP.Version, 1, 1, 1)
+            tooltip:AddLine(" ", 1, 1, 1)
+            tooltip:AddLine(L["MinimapTooltipLeftClick"], 1, 1, 1)
+            tooltip:AddLine(L["MinimapTooltipRightClick"], 1, 1, 1)
+            tooltip:AddLine(" ", 1, 1, 1)
+            tooltip:AddLine(L["MinimapTooltipStatus"] .. (iSPSettings.Enabled and L["StatusEnabled"] or L["StatusDisabled"]), 1, 1, 1)
 
             -- Show registered sounds count
             local soundCount = iSPSettings.SoundFiles and #iSPSettings.SoundFiles or 0
-            tooltip:AddLine(Colors.Gray .. "Registered Sounds: " .. soundCount .. "|r")
+            tooltip:AddLine(string.format(L["MinimapTooltipSounds"], soundCount), 1, 1, 1)
 
             -- Show enabled triggers count
             local enabledTriggers = 0
@@ -801,7 +805,8 @@ function iSP:CreateMinimapButton()
                     end
                 end
             end
-            tooltip:AddLine(Colors.Gray .. "Enabled Triggers: " .. enabledTriggers .. "|r")
+            tooltip:AddLine(string.format(L["MinimapTooltipTriggers"], enabledTriggers), 1, 1, 1)
+            tooltip:Show()
         end,
     })
 
@@ -824,10 +829,10 @@ function iSP:ToggleMinimapButton()
 
     if iSPSettings.MinimapButton.hide then
         LDBIcon:Hide("iSoundPlayer")
-        print(L["PrintPrefix"] .. "Minimap button hidden")
+        print(L["PrintPrefix"] .. L["MinimapHidden"])
     else
         LDBIcon:Show("iSoundPlayer")
-        print(L["PrintPrefix"] .. "Minimap button shown")
+        print(L["PrintPrefix"] .. L["MinimapShown"])
     end
 end
 
@@ -845,11 +850,15 @@ function iSP:CreateiSPStyleFrame(parent, width, height, point, name)
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true,
-        tileSize = 32,
-        edgeSize = 32,
-        insets = {left = 8, right = 8, top = 8, bottom = 8}
+        edgeSize = 16,
+        insets = {left = 5, right = 5, top = 5, bottom = 5},
     })
+    -- Add to UISpecialFrames for ESC functionality
+    if name then
+        if not tContains(UISpecialFrames, name) then
+            tinsert(UISpecialFrames, name)
+        end
+    end
     return frame
 end
 

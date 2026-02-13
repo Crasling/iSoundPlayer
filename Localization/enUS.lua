@@ -213,6 +213,81 @@ L["Yes"] = "Yes"
 L["No"] = "No"
 L["Confirm"] = "Confirm"
 L["Cancel"] = "Cancel"
+L["InCombat"] = Msg("Cannot be used in combat.")
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                             Options Panel - Sidebar                            │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["SidebarHeaderiSP"] = Colors.iSP .. "iSoundPlayer|r"
+L["SidebarHeaderOtherAddons"] = Colors.iSP .. "Other Addons|r"
+L["TabINIF"] = "iNIF Settings"
+L["TabINIFPromo"] = "iNeedIfYouNeed"
+L["TabIWR"] = "iWR Settings"
+L["TabIWRPromo"] = "iWillRemember"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                          Options Panel - Interface                             │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["InterfaceSettings"] = Colors.iSP .. "Interface"
+L["SettingsHeader"] = Colors.iSP .. "Settings"
+L["GeneralInfo"] = Colors.Gray .. "iSoundPlayer allows you to play custom MP3 files at specific triggers." .. Colors.Reset
+L["SoundFilesInfoShort"] = Colors.Gray .. "Place your MP3 or OGG files in:|r\n" .. Colors.White .. "Interface\\AddOns\\iSoundPlayer\\sounds\\|r\n\n" .. Colors.iSP .. "Sample Sounds:|r " .. Colors.Gray .. "Browse the iSoundPlayer\\_Samples folder, copy your favorites to the sounds folder, then register them here using their filename. Test before assigning!|r\n\n" .. Colors.iSP .. "IMPORTANT:|r " .. Colors.Gray .. "Use /reload after adding files (no restart needed)" .. Colors.Reset
+L["FilenameInputLabel"] = Colors.White .. "Filename:|r " .. Colors.Gray .. "(e.g., mysound or mysound.mp3)" .. Colors.Reset
+L["TestBtn"] = "Test"
+L["SoundLabel"] = "Sound:"
+L["None"] = "None"
+L["NoSoundsWarning"] = "No sounds registered! Add sounds in the Sounds tab first."
+L["NoSoundSelected"] = "No sound selected for this trigger!"
+L["TriggerDataError"] = Colors.Red .. "Trigger data not loaded!" .. Colors.Reset
+L["Enabled"] = "Enabled"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                          Options Panel - Other Addons                          │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["INIFSettingsHeader"] = Colors.iSP .. "iNeedIfYouNeed Settings"
+L["INIFInstalledDesc"] = Colors.iSP .. "iNeedIfYouNeed" .. Colors.Reset .. " is installed! You can access iNIF settings from here.\n\n" .. Colors.Gray .. "Note: These settings are managed by iNIF and will affect the iNIF addon." .. Colors.Reset
+L["INIFOpenSettings"] = "Open iNIF Settings"
+L["INIFNotFound"] = "iNIF settings not found!"
+L["INIFPromoHeader"] = Colors.iSP .. "iNeedIfYouNeed"
+L["INIFPromoDesc"] = Colors.iSP .. "iNeedIfYouNeed" .. Colors.Reset .. " is a smart looting addon. It automatically rolls Need when party members need items, otherwise Greeds. Never miss the chance on random BoE loot that should have been greeded by all.\n\n" .. Colors.Reset .. "Simple checkbox on loot frames — check it and click Greed to enable monitoring."
+L["INIFPromoLink"] = "Available on the CurseForge App and at curseforge.com/wow/addons/ineedifyouneed"
+L["IWRSettingsHeader"] = Colors.iSP .. "iWillRemember Settings"
+L["IWRInstalledDesc"] = Colors.iSP .. "iWillRemember" .. Colors.Reset .. " is installed! You can access iWR settings from here.\n\n" .. Colors.Gray .. "Note: These settings are managed by iWR and will affect the iWR addon." .. Colors.Reset
+L["IWROpenSettings"] = "Open iWR Settings"
+L["IWRNotFound"] = "iWR settings not found!"
+L["IWRPromoHeader"] = Colors.iSP .. "iWillRemember"
+L["IWRPromoDesc"] = Colors.iSP .. "iWillRemember" .. Colors.Reset .. " is an addon designed to help you track and easily share player notes with friends.\n\n" .. Colors.Reset .. "Keep notes on players you meet — who to avoid, who's reliable, and share this knowledge with your guild."
+L["IWRPromoLink"] = "Available on the CurseForge App and at curseforge.com/wow/addons/iwillremember"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                              Minimap Tooltip                                   │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["MinimapTooltipLeftClick"] = Colors.Yellow .. "Left Click: " .. Colors.Orange .. "Setup Guide"
+L["MinimapTooltipRightClick"] = Colors.Yellow .. "Right Click: " .. Colors.Orange .. "Open Settings"
+L["MinimapTooltipStatus"] = Colors.Yellow .. "Status: " .. Colors.Reset
+L["StatusEnabled"] = Colors.Green .. "Enabled" .. Colors.Reset
+L["StatusDisabled"] = Colors.Red .. "Disabled" .. Colors.Reset
+L["MinimapTooltipSounds"] = Colors.Yellow .. "Sounds: " .. Colors.Orange .. "%d registered"
+L["MinimapTooltipTriggers"] = Colors.Yellow .. "Triggers: " .. Colors.Orange .. "%d enabled"
+L["MinimapHidden"] = "Minimap button hidden"
+L["MinimapShown"] = "Minimap button shown"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                                Setup Guide                                     │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["SetupGuideHeader"] = Colors.iSP .. "iSoundPlayer Setup Guide|r"
+L["SetupGuideWelcome"] = Colors.iSP .. "Welcome to iSoundPlayer!|r\n\n" .. Colors.White .. "This addon lets you play custom MP3 or OGG sound files when game events happen.|r"
+L["SetupGuideStep1Header"] = Colors.iSP .. "Step 1: Add Your Sound Files|r"
+L["SetupGuideStep1Text"] = Colors.White .. "1. Navigate to your WoW folder:|r\n" .. Colors.Gray .. "   Interface\\AddOns\\iSoundPlayer\\sounds\\|r\n\n" .. Colors.White .. "2. Place your MP3 or OGG files in the sounds folder|r\n\n" .. Colors.White .. "3. Type |r" .. Colors.iSP .. "/reload|r " .. Colors.White .. "in chat (no restart needed)|r\n\n" .. Colors.iSP .. "Sample Sounds:|r " .. Colors.Gray .. "Find samples you like in the iSoundPlayer_Samples folder, copy them into the sounds folder, then use their filename when registering sounds in-game. Test them before assigning to triggers!|r"
+L["SetupGuideStep2Header"] = Colors.iSP .. "Step 2: Register Your Sounds|r"
+L["SetupGuideStep2Text"] = Colors.White .. "1. Open Settings by typing |r" .. Colors.Yellow .. "/isp|r " .. Colors.White .. "or clicking the minimap icon|r\n\n" .. Colors.White .. "2. Go to the |r" .. Colors.iSP .. "Sound Files|r " .. Colors.White .. "tab|r\n\n" .. Colors.White .. "3. Enter a name for your sound and select the file from the dropdown|r\n\n" .. Colors.White .. "4. Click |r" .. Colors.Green .. "Register Sound|r " .. Colors.White .. "to add it to your library|r\n\n" .. Colors.White .. "5. Use the |r" .. Colors.Yellow .. "Test Sound|r " .. Colors.White .. "button to preview it|r"
+L["SetupGuideStep3Header"] = Colors.iSP .. "Step 3: Configure Triggers|r"
+L["SetupGuideStep3Text"] = Colors.White .. "1. Go to the |r" .. Colors.iSP .. "Triggers|r " .. Colors.White .. "tab|r\n\n" .. Colors.White .. "2. Browse through categories like:|r\n" .. Colors.Gray .. "   • Player Events (login, level up, death)|r\n" .. Colors.Gray .. "   • Combat Events (enter/exit combat)|r\n" .. Colors.Gray .. "   • PvP Events (kills, sprees)|r\n" .. Colors.Gray .. "   • And many more!|r\n\n" .. Colors.White .. "3. Enable a trigger and assign a registered sound to it|r\n\n" .. Colors.White .. "4. Customize playback options (loop, fade, etc.)|r"
+L["SetupGuideQuickTipsHeader"] = Colors.iSP .. "Quick Tips|r"
+L["SetupGuideQuickTipsText"] = Colors.iSP .. "•|r " .. Colors.White .. "Use |r" .. Colors.Yellow .. "/isp|r " .. Colors.White .. "to open settings|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Left-click minimap icon to open this guide|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Right-click minimap icon to open settings|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Always |r" .. Colors.Yellow .. "/reload|r " .. Colors.White .. "after adding new sound files|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Check the |r" .. Colors.iSP .. "General|r " .. Colors.White .. "tab to enable/disable the addon|r"
+L["SetupGuideDontShow"] = Colors.Gray .. "Don't show on startup|r"
+L["SetupGuideOpenSettings"] = Colors.iSP .. "Open Settings|r"
+L["SetupGuideClose"] = Colors.Red .. "Close|r"
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                Slash Commands                                  │

@@ -12,6 +12,8 @@
 -- ╰───────────────────────────────────────────────────────────────────────────────╯
 
 local addonName, iSP = ...
+local L = iSP.L
+local Colors = iSP.Colors
 local iconPath = iSP.AddonPath .. "Images\\Icons\\Logo_iSP.blp"
 
 -- ╭───────────────────────────────────────────────────────────────────────────────╮
@@ -102,16 +104,16 @@ end
 -- ╰───────────────────────────────────────────────────────────────────────────────╯
 
 StaticPopupDialogs["ISP_RESET_SETTINGS"] = {
-    text = "Reset all settings to defaults?",
-    button1 = "Yes",
-    button2 = "No",
+    text = L["ResetConfirm"],
+    button1 = L["Yes"],
+    button2 = L["No"],
     OnAccept = function()
         for key, value in pairs(iSP.SettingsDefault) do
             if key ~= "MinimapButton" then
                 iSPSettings[key] = type(value) == "table" and CopyTable(value) or value
             end
         end
-        print(iSP.L["PrintPrefix"] .. iSP.Colors.Green .. "Settings reset to defaults!")
+        print(L["SettingsResetSuccess"])
         if iSP.RefreshSettingsPanel then
             iSP:RefreshSettingsPanel()
         end
@@ -172,14 +174,9 @@ function iSP:CreateOptionsPanel()
     })
     titleBar:SetBackdropColor(0.07, 0.07, 0.12, 1)
 
-    local titleIcon = titleBar:CreateTexture(nil, "ARTWORK")
-    titleIcon:SetSize(20, 20)
-    titleIcon:SetPoint("LEFT", titleBar, "LEFT", 12, 0)
-    titleIcon:SetTexture(iconPath)
-
     local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-    titleText:SetPoint("LEFT", titleIcon, "RIGHT", 8, 0)
-    titleText:SetText(iSP.Colors.iSP .. "iSoundPlayer" .. iSP.Colors.Green .. " v" .. iSP.Version)
+    titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
+    titleText:SetText(Colors.iSP .. "iSoundPlayer" .. Colors.Green .. " v" .. iSP.Version)
 
     local closeButton = CreateFrame("Button", nil, settingsFrame, "UIPanelCloseButton")
     closeButton:SetPoint("TOPRIGHT", settingsFrame, "TOPRIGHT", 0, 0)
@@ -266,6 +263,8 @@ function iSP:CreateOptionsPanel()
 
     local tabContents = {generalContainer, soundsContainer, triggersContainer, aboutContainer, iNIFContainer, iWRContainer}
     local sidebarButtons = {}
+    local iNIFTabButton = nil  -- Reference to iNIF tab button
+    local iWRTabButton = nil   -- Reference to iWR tab button
     local activeIndex = 1
 
     local function ShowTab(index)
@@ -286,14 +285,14 @@ function iSP:CreateOptionsPanel()
 
     -- Build sidebar with section headers and tabs (iNIF/iWR style)
     local sidebarItems = {
-        {type = "header", label = iSP.Colors.iSP .. "iSoundPlayer|r"},
-        {type = "tab", label = "General", index = 1},
-        {type = "tab", label = "Sounds", index = 2},
-        {type = "tab", label = "Triggers", index = 3},
-        {type = "tab", label = "About", index = 4},
-        {type = "header", label = iSP.Colors.iSP .. "Other Addons|r"},  -- Always show
-        {type = "tab", label = "iNeedIfYouNeed", index = 5},  -- Always show
-        {type = "tab", label = "iWillRemember", index = 6},  -- Always show
+        {type = "header", label = L["SidebarHeaderiSP"]},
+        {type = "tab", label = L["Tab1General"], index = 1},
+        {type = "tab", label = L["Tab2Sounds"], index = 2},
+        {type = "tab", label = L["Tab3Triggers"], index = 3},
+        {type = "tab", label = L["Tab4About"], index = 4},
+        {type = "header", label = L["SidebarHeaderOtherAddons"]},
+        {type = "tab", label = L["TabINIFPromo"], index = 5},
+        {type = "tab", label = L["TabIWRPromo"], index = 6},
     }
 
     local sidebarY = -6
@@ -329,6 +328,14 @@ function iSP:CreateOptionsPanel()
             end)
 
             table.insert(sidebarButtons, btn)
+
+            -- Save references to addon tab buttons
+            if item.index == 5 then
+                iNIFTabButton = btn
+            elseif item.index == 6 then
+                iWRTabButton = btn
+            end
+
             sidebarY = sidebarY - 28
         end
     end
@@ -342,20 +349,20 @@ function iSP:CreateOptionsPanel()
     -- ╰───────────────────────────────────────────────────────────────╯
     local y = -10
 
-    _, y = CreateSectionHeader(generalContent, iSP.Colors.iSP .. "General Settings", y)
+    _, y = CreateSectionHeader(generalContent, L["GeneralSettings"], y)
 
     local infoText
     infoText, y = CreateInfoText(generalContent,
-        "|cFF808080iSoundPlayer allows you to play custom MP3 files at specific triggers.|r",
+        L["GeneralInfo"],
         y, "GameFontDisableSmall")
 
     y = y - 8
-    _, y = CreateSectionHeader(generalContent, iSP.Colors.iSP .. "Interface", y)
+    _, y = CreateSectionHeader(generalContent, L["InterfaceSettings"], y)
 
     -- Minimap button checkbox
     local cbMinimap
-    cbMinimap, y = CreateSettingsCheckbox(generalContent, "Show Minimap Button",
-        "|cFF808080Show or hide the minimap button. Changes apply immediately.|r",
+    cbMinimap, y = CreateSettingsCheckbox(generalContent, L["ShowMinimapButton"],
+        L["DescShowMinimapButton"],
         y, nil,
         function() return not iSPSettings.MinimapButton.hide end,
         function(checked)
@@ -372,10 +379,10 @@ function iSP:CreateOptionsPanel()
     checkboxRefs.MinimapButton = cbMinimap
 
     y = y - 8
-    _, y = CreateSectionHeader(generalContent, iSP.Colors.iSP .. "Settings", y)
+    _, y = CreateSectionHeader(generalContent, L["SettingsHeader"], y)
 
     local resetBtn
-    resetBtn, y = CreateSettingsButton(generalContent, "Reset to Defaults", 200, y,
+    resetBtn, y = CreateSettingsButton(generalContent, L["ResetToDefaults"], 200, y,
         function()
             StaticPopup_Show("ISP_RESET_SETTINGS")
         end)
@@ -387,21 +394,21 @@ function iSP:CreateOptionsPanel()
     -- ╰───────────────────────────────────────────────────────────────╯
     y = -10
 
-    _, y = CreateSectionHeader(soundsContent, iSP.Colors.iSP .. "Sound Files", y)
+    _, y = CreateSectionHeader(soundsContent, L["SoundFiles"], y)
 
     local soundInfo
     soundInfo, y = CreateInfoText(soundsContent,
-        "|cFF808080Place your MP3 or OGG files in:|r\n|cFFFFFFFFInterface\\AddOns\\iSoundPlayer\\sounds\\|r\n\n|cffff9716Sample Sounds:|r |cFF808080Browse the iSoundPlayer\\_Samples folder, copy your favorites to the sounds folder, then register them here using their filename. Test before assigning!|r\n\n|cFFFF9716IMPORTANT:|r |cFF808080Use /reload after adding files (no restart needed)|r",
+        L["SoundFilesInfoShort"],
         y, "GameFontDisableSmall")
 
     y = y - 10
-    _, y = CreateSectionHeader(soundsContent, iSP.Colors.iSP .. "Add Sound File", y)
+    _, y = CreateSectionHeader(soundsContent, L["AddSoundFile"], y)
 
     y = y - 8
 
     local soundNameLabel = soundsContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     soundNameLabel:SetPoint("TOPLEFT", soundsContent, "TOPLEFT", 25, y)
-    soundNameLabel:SetText("|cFFFFFFFFFilename:|r |cFF808080(e.g., mysound or mysound.mp3)|r")
+    soundNameLabel:SetText(L["FilenameInputLabel"])
 
     y = y - 20
 
@@ -421,7 +428,7 @@ function iSP:CreateOptionsPanel()
     local addSoundBtn = CreateFrame("Button", nil, soundsContent, "UIPanelButtonTemplate")
     addSoundBtn:SetSize(120, 24)
     addSoundBtn:SetPoint("TOPLEFT", soundsContent, "TOPLEFT", 25, y)
-    addSoundBtn:SetText("Add Sound")
+    addSoundBtn:SetText(L["AddSound"])
     addSoundBtn:SetScript("OnClick", function()
         local fileName = soundNameBox:GetText()
         if fileName and fileName ~= "" then
@@ -437,13 +444,13 @@ function iSP:CreateOptionsPanel()
             -- Check if already exists
             for _, sound in ipairs(iSPSettings.SoundFiles) do
                 if sound == fileName then
-                    print(iSP.L["DebugWarning"] .. "Sound already registered!")
+                    print(L["DebugWarning"] .. L["SoundAlreadyExists"])
                     return
                 end
             end
 
             table.insert(iSPSettings.SoundFiles, fileName)
-            print(iSP.L["PrintPrefix"] .. iSP.Colors.Green .. "Added: " .. fileName)
+            print(string.format(L["SoundAdded"], fileName))
             soundNameBox:SetText("")
             UpdateSoundList()
         end
@@ -452,7 +459,7 @@ function iSP:CreateOptionsPanel()
     local testSoundBtn = CreateFrame("Button", nil, soundsContent, "UIPanelButtonTemplate")
     testSoundBtn:SetSize(120, 24)
     testSoundBtn:SetPoint("LEFT", addSoundBtn, "RIGHT", 6, 0)
-    testSoundBtn:SetText("Test Sound")
+    testSoundBtn:SetText(L["TestSound"])
     testSoundBtn:SetScript("OnClick", function()
         local fileName = soundNameBox:GetText()
         if fileName and fileName ~= "" then
@@ -462,14 +469,14 @@ function iSP:CreateOptionsPanel()
             end
             iSP:TestSound(fileName)
         else
-            print(iSP.L["DebugError"] .. "Enter a filename first!")
+            print(L["EnterFilenameFirst"])
         end
     end)
 
     y = y - 28
 
     y = y - 8
-    _, y = CreateSectionHeader(soundsContent, iSP.Colors.iSP .. "Registered Sounds", y)
+    _, y = CreateSectionHeader(soundsContent, L["RegisteredSounds"], y)
 
     -- Container for sound list items
     local soundListContainer = CreateFrame("Frame", nil, soundsContent)
@@ -493,7 +500,7 @@ function iSP:CreateOptionsPanel()
         if not iSPSettings.SoundFiles or #iSPSettings.SoundFiles == 0 then
             local emptyText = soundListContainer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
             emptyText:SetPoint("TOPLEFT", soundListContainer, "TOPLEFT", 5, listY)
-            emptyText:SetText("|cFF808080No sound files registered yet.|r")
+            emptyText:SetText(L["NoSoundsRegistered"])
             table.insert(soundListFrames, emptyText)
         else
             for i, sound in ipairs(iSPSettings.SoundFiles) do
@@ -513,13 +520,13 @@ function iSP:CreateOptionsPanel()
                 -- Sound name text
                 local soundText = soundFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                 soundText:SetPoint("LEFT", soundFrame, "LEFT", 8, 0)
-                soundText:SetText(iSP.Colors.Green .. i .. ".|r " .. sound)
+                soundText:SetText(Colors.Green .. i .. ".|r " .. sound)
 
                 -- Test button
                 local testBtn = CreateFrame("Button", nil, soundFrame, "UIPanelButtonTemplate")
                 testBtn:SetSize(50, 20)
                 testBtn:SetPoint("RIGHT", soundFrame, "RIGHT", -60, 0)
-                testBtn:SetText("Test")
+                testBtn:SetText(L["TestBtn"])
                 testBtn:SetScript("OnClick", function()
                     iSP:TestSound(sound)
                 end)
@@ -528,7 +535,7 @@ function iSP:CreateOptionsPanel()
                 local removeBtn = CreateFrame("Button", nil, soundFrame, "UIPanelButtonTemplate")
                 removeBtn:SetSize(60, 20)
                 removeBtn:SetPoint("RIGHT", soundFrame, "RIGHT", -4, 0)
-                removeBtn:SetText("Remove")
+                removeBtn:SetText(L["RemoveSound"])
                 removeBtn:SetScript("OnClick", function()
                     -- Remove from table
                     for j, s in ipairs(iSPSettings.SoundFiles) do
@@ -539,7 +546,7 @@ function iSP:CreateOptionsPanel()
                     end
                     -- Refresh list
                     UpdateSoundList()
-                    print(iSP.L["PrintPrefix"] .. iSP.Colors.Yellow .. "Removed sound: " .. sound)
+                    print(string.format(L["SoundRemoved"], sound))
                 end)
 
                 table.insert(soundListFrames, soundFrame)
@@ -563,11 +570,11 @@ function iSP:CreateOptionsPanel()
     -- ╰───────────────────────────────────────────────────────────────╯
     y = -10
 
-    _, y = CreateSectionHeader(triggersContent, iSP.Colors.iSP .. "Triggers", y)
+    _, y = CreateSectionHeader(triggersContent, L["Triggers"], y)
 
     local triggerInfo
     triggerInfo, y = CreateInfoText(triggersContent,
-        "|cFF808080Configure when sounds should play. Connect in-game events to your sound files.|r",
+        L["TriggersInfo"],
         y, "GameFontDisableSmall")
 
     y = y - 8
@@ -577,7 +584,7 @@ function iSP:CreateOptionsPanel()
         for _, category in ipairs(iSP.TriggerCategories) do
             -- Category header
             _, y = CreateSectionHeader(triggersContent,
-                iSP.Colors.iSP .. category.name .. "|r |cFF808080- " .. category.desc .. "|r",
+                Colors.iSP .. category.name .. "|r |cFF808080- " .. category.desc .. "|r",
                 y)
 
             -- Loop through triggers in this category
@@ -616,7 +623,7 @@ function iSP:CreateOptionsPanel()
                     -- Trigger name
                     local nameLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                     nameLabel:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 36, -8)
-                    nameLabel:SetText(iSP.Colors.iSP .. meta.name)
+                    nameLabel:SetText(Colors.iSP .. meta.name)
 
                     -- Trigger description with threshold inline
                     local descLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -632,7 +639,7 @@ function iSP:CreateOptionsPanel()
                     -- Enable checkbox (moved to top-right)
                     local enableCB = CreateFrame("CheckButton", nil, triggerFrame, "InterfaceOptionsCheckButtonTemplate")
                     enableCB:SetPoint("TOPRIGHT", triggerFrame, "TOPRIGHT", -80, -6)
-                    enableCB.Text:SetText("Enabled")
+                    enableCB.Text:SetText(L["Enabled"])
                     enableCB.Text:SetFontObject(GameFontNormalSmall)
 
                     if iSPSettings.Triggers[triggerID] then
@@ -648,7 +655,7 @@ function iSP:CreateOptionsPanel()
                     -- Sound selection label
                     local soundLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     soundLabel:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 10, -48)
-                    soundLabel:SetText("Sound:")
+                    soundLabel:SetText(L["SoundLabel"])
 
                     -- Sound dropdown button
                     local soundDropdown = CreateFrame("Button", nil, triggerFrame, "UIPanelButtonTemplate")
@@ -661,7 +668,7 @@ function iSP:CreateOptionsPanel()
                         currentSound = iSPSettings.Triggers[triggerID].sound
                     end
                     if not currentSound or currentSound == "" then
-                        soundDropdown:SetText("None")
+                        soundDropdown:SetText(L["None"])
                     else
                         soundDropdown:SetText(currentSound)
                     end
@@ -669,7 +676,7 @@ function iSP:CreateOptionsPanel()
                     soundDropdown:SetScript("OnClick", function(self)
                         -- Check if any sounds are registered
                         if not iSPSettings.SoundFiles or #iSPSettings.SoundFiles == 0 then
-                            print(iSP.L["DebugWarning"] .. "No sounds registered! Add sounds in the Sounds tab first.")
+                            print(L["DebugWarning"] .. L["NoSoundsWarning"])
                             return
                         end
 
@@ -681,10 +688,10 @@ function iSP:CreateOptionsPanel()
                             local info = UIDropDownMenu_CreateInfo()
 
                             -- Add "None" option
-                            info.text = "None"
+                            info.text = L["None"]
                             info.func = function()
                                 iSPSettings.Triggers[triggerID].sound = ""
-                                soundDropdown:SetText("None")
+                                soundDropdown:SetText(L["None"])
                             end
                             info.checked = (iSPSettings.Triggers[triggerID].sound == "")
                             UIDropDownMenu_AddButton(info)
@@ -710,13 +717,13 @@ function iSP:CreateOptionsPanel()
                     local testSoundBtn = CreateFrame("Button", nil, triggerFrame, "UIPanelButtonTemplate")
                     testSoundBtn:SetSize(50, 22)
                     testSoundBtn:SetPoint("LEFT", soundDropdown, "RIGHT", 5, 0)
-                    testSoundBtn:SetText("Test")
+                    testSoundBtn:SetText(L["TestBtn"])
                     testSoundBtn:SetScript("OnClick", function()
                         local sound = iSPSettings.Triggers[triggerID].sound
                         if sound and sound ~= "" then
                             iSP:TestSound(sound)
                         else
-                            print(iSP.L["DebugError"] .. "No sound selected for this trigger!")
+                            print(L["DebugError"] .. L["NoSoundSelected"])
                         end
                     end)
 
@@ -730,7 +737,7 @@ function iSP:CreateOptionsPanel()
         -- Fallback if TriggerData.lua not loaded yet
         local errorText = triggersContent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
         errorText:SetPoint("TOP", triggersContent, "TOP", 0, y)
-        errorText:SetText("|cFFFF0000Trigger data not loaded!|r")
+        errorText:SetText(L["TriggerDataError"])
         y = y - 30
     end
 
@@ -741,7 +748,7 @@ function iSP:CreateOptionsPanel()
     -- ╰───────────────────────────────────────────────────────────────╯
     y = -10
 
-    _, y = CreateSectionHeader(aboutContent, "|cffff9716About|r", y)
+    _, y = CreateSectionHeader(aboutContent, L["About"], y)
 
     y = y - 4
 
@@ -753,12 +760,12 @@ function iSP:CreateOptionsPanel()
 
     local aboutTitle = aboutContent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     aboutTitle:SetPoint("TOP", aboutContent, "TOP", 0, y)
-    aboutTitle:SetText(iSP.Colors.iSP .. "iSoundPlayer|r " .. iSP.Colors.Green .. "v" .. iSP.Version .. "|r")
+    aboutTitle:SetText(Colors.iSP .. "iSoundPlayer|r " .. Colors.Green .. "v" .. iSP.Version .. "|r")
     y = y - 20
 
     local aboutAuthor = aboutContent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     aboutAuthor:SetPoint("TOP", aboutContent, "TOP", 0, y)
-    aboutAuthor:SetText("Created by |cFF00FFFF" .. iSP.Author .. "|r")
+    aboutAuthor:SetText(L["CreatedBy"] .. "|cFF00FFFF" .. iSP.Author .. "|r")
     y = y - 16
 
     local aboutGameVer = aboutContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -770,17 +777,17 @@ function iSP:CreateOptionsPanel()
     aboutInfo:SetPoint("TOPLEFT", aboutContent, "TOPLEFT", 25, y)
     aboutInfo:SetWidth(500)
     aboutInfo:SetJustifyH("LEFT")
-    aboutInfo:SetText("Play custom MP3 files at specific triggers in World of Warcraft.\n\nEarly development version.")
+    aboutInfo:SetText(L["AboutInfo"])
     local aih = aboutInfo:GetStringHeight()
     if aih < 14 then aih = 14 end
     y = y - aih - 8
 
     y = y - 4
-    _, y = CreateSectionHeader(aboutContent, "|cffff9716Developer|r", y)
+    _, y = CreateSectionHeader(aboutContent, L["Developer"], y)
 
     local cbDebug
-    cbDebug, y = CreateSettingsCheckbox(aboutContent, "Enable Debug Mode",
-        "|cFF808080Enables verbose debug messages in chat.|r",
+    cbDebug, y = CreateSettingsCheckbox(aboutContent, L["EnableDebugMode"],
+        L["DescDebugMode"],
         y, "DebugMode")
     checkboxRefs.DebugMode = cbDebug
 
@@ -797,17 +804,16 @@ function iSP:CreateOptionsPanel()
     iNIFInstalledFrame:Hide()  -- Start hidden
 
     y = -10
-    _, y = CreateSectionHeader(iNIFInstalledFrame, iSP.Colors.iSP .. "iNeedIfYouNeed Settings", y)
+    _, y = CreateSectionHeader(iNIFInstalledFrame, L["INIFSettingsHeader"], y)
     local iNIFDesc
     iNIFDesc, y = CreateInfoText(iNIFInstalledFrame,
-        iSP.Colors.iSP .. "iNeedIfYouNeed" .. iSP.Colors.Reset .. " is installed! You can access iNIF settings from here.\n\n" ..
-        iSP.Colors.Gray .. "Note: These settings are managed by iNIF and will affect the iNIF addon.|r",
+        L["INIFInstalledDesc"],
         y, "GameFontHighlight")
     y = y - 10
     local iNIFButton = CreateFrame("Button", nil, iNIFInstalledFrame, "UIPanelButtonTemplate")
     iNIFButton:SetSize(180, 28)
     iNIFButton:SetPoint("TOPLEFT", iNIFInstalledFrame, "TOPLEFT", 25, y)
-    iNIFButton:SetText("Open iNIF Settings")
+    iNIFButton:SetText(L["INIFOpenSettings"])
     iNIFButton:SetScript("OnClick", function()
         local iNIFFrame = _G["iNIFSettingsFrame"]
         if iNIFFrame then
@@ -817,7 +823,7 @@ function iSP:CreateOptionsPanel()
             settingsFrame:Hide()
             iNIFFrame:Show()
         else
-            print(iSP.L["DebugError"] .. "iNIF settings not found!")
+            print(L["DebugError"] .. L["INIFNotFound"])
         end
     end)
 
@@ -827,16 +833,15 @@ function iSP:CreateOptionsPanel()
     iNIFPromoFrame:Hide()  -- Start hidden
 
     y = -10
-    _, y = CreateSectionHeader(iNIFPromoFrame, iSP.Colors.iSP .. "iNeedIfYouNeed", y)
+    _, y = CreateSectionHeader(iNIFPromoFrame, L["INIFPromoHeader"], y)
     local iNIFPromo
     iNIFPromo, y = CreateInfoText(iNIFPromoFrame,
-        iSP.Colors.iSP .. "iNeedIfYouNeed" .. iSP.Colors.Reset .. " is a smart looting addon. It automatically rolls Need when party members need items, otherwise Greeds. Never miss the chance on random BoE loot that should have been greeded by all.\n\n" ..
-        iSP.Colors.Reset .. "Simple checkbox on loot frames — check it and click Greed to enable monitoring.",
+        L["INIFPromoDesc"],
         y, "GameFontHighlight")
     y = y - 4
     local iNIFPromoLink
     iNIFPromoLink, y = CreateInfoText(iNIFPromoFrame,
-        "Available on the CurseForge App and at curseforge.com/wow/addons/ineedifyouneed",
+        L["INIFPromoLink"],
         y, "GameFontDisableSmall")
 
     scrollChildren[5]:SetHeight(200)  -- Static height
@@ -850,19 +855,19 @@ function iSP:CreateOptionsPanel()
     iWRInstalledFrame:Hide()  -- Start hidden
 
     y = -10
-    _, y = CreateSectionHeader(iWRInstalledFrame, iSP.Colors.iSP .. "iWillRemember Settings", y)
+    _, y = CreateSectionHeader(iWRInstalledFrame, L["IWRSettingsHeader"], y)
     local iWRDesc
     iWRDesc, y = CreateInfoText(iWRInstalledFrame,
-        iSP.Colors.iSP .. "iWillRemember" .. iSP.Colors.Reset .. " is installed! You can access iWR settings from here.\n\n" ..
-        iSP.Colors.Gray .. "Note: These settings are managed by iWR and will affect the iWR addon.|r",
+        L["IWRInstalledDesc"],
         y, "GameFontHighlight")
     y = y - 10
     local iWRButton = CreateFrame("Button", nil, iWRInstalledFrame, "UIPanelButtonTemplate")
     iWRButton:SetSize(180, 28)
     iWRButton:SetPoint("TOPLEFT", iWRInstalledFrame, "TOPLEFT", 25, y)
-    iWRButton:SetText("Open iWR Settings")
+    iWRButton:SetText(L["IWROpenSettings"])
     iWRButton:SetScript("OnClick", function()
-        local iWRFrame = _G["iWRSettingsFrame"]
+        -- Access iWR settings frame via the iWR addon object
+        local iWRFrame = _G.iWR and _G.iWR.SettingsFrame
         if iWRFrame then
             local point, _, relPoint, xOfs, yOfs = settingsFrame:GetPoint()
             iWRFrame:ClearAllPoints()
@@ -870,7 +875,7 @@ function iSP:CreateOptionsPanel()
             settingsFrame:Hide()
             iWRFrame:Show()
         else
-            print(iSP.L["DebugError"] .. "iWR settings not found!")
+            print(L["DebugError"] .. L["IWRNotFound"])
         end
     end)
 
@@ -880,16 +885,15 @@ function iSP:CreateOptionsPanel()
     iWRPromoFrame:Hide()  -- Start hidden
 
     y = -10
-    _, y = CreateSectionHeader(iWRPromoFrame, iSP.Colors.iSP .. "iWillRemember", y)
+    _, y = CreateSectionHeader(iWRPromoFrame, L["IWRPromoHeader"], y)
     local iWRPromo
     iWRPromo, y = CreateInfoText(iWRPromoFrame,
-        iSP.Colors.iSP .. "iWillRemember" .. iSP.Colors.Reset .. " is an addon designed to help you track and easily share player notes with friends.\n\n" ..
-        iSP.Colors.Reset .. "Keep notes on players you meet — who to avoid, who's reliable, and share this knowledge with your guild.",
+        L["IWRPromoDesc"],
         y, "GameFontHighlight")
     y = y - 4
     local iWRPromoLink
     iWRPromoLink, y = CreateInfoText(iWRPromoFrame,
-        "Available on the CurseForge App and at curseforge.com/wow/addons/iwillremember",
+        L["IWRPromoLink"],
         y, "GameFontDisableSmall")
 
     scrollChildren[6]:SetHeight(200)  -- Static height
@@ -919,9 +923,19 @@ function iSP:CreateOptionsPanel()
         iNIFInstalledFrame:SetShown(iNIFLoaded)
         iNIFPromoFrame:SetShown(not iNIFLoaded)
 
+        -- Update iNIF tab button text
+        if iNIFTabButton then
+            iNIFTabButton.text:SetText(iNIFLoaded and L["TabINIF"] or L["TabINIFPromo"])
+        end
+
         local iWRLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("iWillRemember")
         iWRInstalledFrame:SetShown(iWRLoaded)
         iWRPromoFrame:SetShown(not iWRLoaded)
+
+        -- Update iWR tab button text
+        if iWRTabButton then
+            iWRTabButton.text:SetText(iWRLoaded and L["TabIWR"] or L["TabIWRPromo"])
+        end
     end)
 
     -- ╭───────────────────────────────────────────────────────────────╮
@@ -940,24 +954,36 @@ end
 -- │                          Toggle / Open / Close                                │
 -- ╰───────────────────────────────────────────────────────────────────────────────╯
 
+-- Close other addon settings panels when opening ours
+local function CloseOtherAddonSettings()
+    local iNIFFrame = _G["iNIFSettingsFrame"]
+    if iNIFFrame and iNIFFrame:IsShown() then iNIFFrame:Hide() end
+
+    -- iWR is an AceAddon global
+    local iWRFrame = _G.iWR and _G.iWR.SettingsFrame
+    if iWRFrame and iWRFrame:IsShown() then iWRFrame:Hide() end
+end
+
 function iSP:SettingsToggle()
     if iSP.State.InCombat then
-        print("|cFFFF0000Cannot open settings while in combat!|r")
+        print(L["InCombat"])
         return
     end
     if iSP.SettingsFrame and iSP.SettingsFrame:IsVisible() then
         iSP.SettingsFrame:Hide()
     elseif iSP.SettingsFrame then
+        CloseOtherAddonSettings()
         iSP.SettingsFrame:Show()
     end
 end
 
 function iSP:SettingsOpen()
     if iSP.State.InCombat then
-        print("|cFFFF0000Cannot open settings while in combat!|r")
+        print(L["InCombat"])
         return
     end
     if iSP.SettingsFrame then
+        CloseOtherAddonSettings()
         iSP.SettingsFrame:Show()
     end
 end
