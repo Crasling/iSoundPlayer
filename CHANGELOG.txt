@@ -17,6 +17,17 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.2.1.1 - Show Notifications setting
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- Added "Show Notifications" checkbox to General settings (Interface section)
+- Controls whether chat messages are shown when sounds play
+
+[CHANGED]
+- Default for ShowNotifications changed to false (hidden by default)
+
+═══════════════════════════════════════════════════════════
 Version 0.2.1 - Version bump
 ═══════════════════════════════════════════════════════════
 

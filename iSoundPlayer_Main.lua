@@ -82,7 +82,7 @@ iSP.State = {
 iSP.SettingsDefault = {
     -- General
     Enabled = true,
-    ShowNotifications = true,
+    ShowNotifications = false,
     DebugMode = false,
 
     -- Minimap

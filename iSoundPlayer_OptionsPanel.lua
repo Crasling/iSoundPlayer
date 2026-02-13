@@ -378,6 +378,13 @@ function iSP:CreateOptionsPanel()
         end)
     checkboxRefs.MinimapButton = cbMinimap
 
+    -- Show notifications checkbox
+    local cbNotifications
+    cbNotifications, y = CreateSettingsCheckbox(generalContent, L["ShowNotifications"],
+        L["DescShowNotifications"],
+        y, "ShowNotifications")
+    checkboxRefs.ShowNotifications = cbNotifications
+
     y = y - 8
     _, y = CreateSectionHeader(generalContent, L["SettingsHeader"], y)
 

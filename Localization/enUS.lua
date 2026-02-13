@@ -55,7 +55,7 @@ end})
 
 -- Helper function for consistent message formatting
 local function Msg(message)
-    return Colors.iSP .. "[iSP]: " .. Colors.Reset .. message
+    return Colors.iSP .. "[iSP]: " .. message
 end
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
