@@ -2,6 +2,9 @@ local addonName, iSP = ...
 local L = iSP.L or {}
 local Colors = iSP.Colors or {}
 
+-- Retail requires BackdropTemplateMixin for BackdropTemplate
+local BACKDROP_TEMPLATE = BackdropTemplateMixin and "BackdropTemplate" or nil
+
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                              Setup Guide Window                                │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
@@ -15,7 +18,7 @@ function iSP:CreateSetupGuide()
     end
 
     -- Main frame
-    setupGuideFrame = CreateFrame("Frame", "iSPSetupGuide", UIParent, "BackdropTemplate")
+    setupGuideFrame = CreateFrame("Frame", "iSPSetupGuide", UIParent, BACKDROP_TEMPLATE)
     setupGuideFrame:SetSize(520, 480)
     setupGuideFrame:SetPoint("CENTER")
     setupGuideFrame:SetFrameStrata("DIALOG")

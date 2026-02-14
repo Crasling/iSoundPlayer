@@ -13,6 +13,11 @@
 
 local addonName, iSP = ...
 local L = iSP.L
+
+-- Retail 10.0+ removed InterfaceOptionsCheckButtonTemplate, use UICheckButtonTemplate instead
+local CHECKBOX_TEMPLATE = InterfaceOptionsCheckButtonTemplate and "InterfaceOptionsCheckButtonTemplate" or "UICheckButtonTemplate"
+-- Retail requires BackdropTemplateMixin for BackdropTemplate
+local BACKDROP_TEMPLATE = BackdropTemplateMixin and "BackdropTemplate" or nil
 local Colors = iSP.Colors
 local iconPath = iSP.AddonPath .. "Images\\Icons\\Logo_iSP.blp"
 
@@ -21,7 +26,7 @@ local iconPath = iSP.AddonPath .. "Images\\Icons\\Logo_iSP.blp"
 -- ╰───────────────────────────────────────────────────────────────────────────────╯
 
 local function CreateSectionHeader(parent, text, yOffset)
-    local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local header = CreateFrame("Frame", nil, parent, BACKDROP_TEMPLATE)
     header:SetHeight(24)
     header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     header:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
@@ -44,8 +49,13 @@ local function CreateSectionHeader(parent, text, yOffset)
 end
 
 local function CreateSettingsCheckbox(parent, label, descText, yOffset, settingKey, getFunc, setFunc)
-    local cb = CreateFrame("CheckButton", nil, parent, "InterfaceOptionsCheckButtonTemplate")
+    local cb = CreateFrame("CheckButton", nil, parent, CHECKBOX_TEMPLATE)
     cb:SetPoint("TOPLEFT", parent, "TOPLEFT", 20, yOffset)
+    -- UICheckButtonTemplate (retail) doesn't have .Text, create it if missing
+    if not cb.Text then
+        cb.Text = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        cb.Text:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+    end
     cb.Text:SetText(label)
     cb.Text:SetFontObject(GameFontHighlight)
 
@@ -144,7 +154,7 @@ function iSP:CreateOptionsPanel()
     iSP.SettingsFrame = settingsFrame
 
     -- Shadow
-    local shadow = CreateFrame("Frame", nil, settingsFrame, "BackdropTemplate")
+    local shadow = CreateFrame("Frame", nil, settingsFrame, BACKDROP_TEMPLATE)
     shadow:SetPoint("TOPLEFT", settingsFrame, -1, 1)
     shadow:SetPoint("BOTTOMRIGHT", settingsFrame, 1, -1)
     shadow:SetBackdrop({
@@ -162,7 +172,7 @@ function iSP:CreateOptionsPanel()
     -- ╭───────────────────────────────────────────────────────────────╮
     -- │                         Title Bar                             │
     -- ╰───────────────────────────────────────────────────────────────╯
-    local titleBar = CreateFrame("Frame", nil, settingsFrame, "BackdropTemplate")
+    local titleBar = CreateFrame("Frame", nil, settingsFrame, BACKDROP_TEMPLATE)
     titleBar:SetHeight(31)
     titleBar:SetPoint("TOPLEFT", settingsFrame, "TOPLEFT", 0, 0)
     titleBar:SetPoint("TOPRIGHT", settingsFrame, "TOPRIGHT", 0, 0)
@@ -187,7 +197,7 @@ function iSP:CreateOptionsPanel()
     -- ╰───────────────────────────────────────────────────────────────╯
     local sidebarWidth = 150
 
-    local sidebar = CreateFrame("Frame", nil, settingsFrame, "BackdropTemplate")
+    local sidebar = CreateFrame("Frame", nil, settingsFrame, BACKDROP_TEMPLATE)
     sidebar:SetWidth(sidebarWidth)
     sidebar:SetPoint("TOPLEFT", settingsFrame, "TOPLEFT", 10, -35)
     sidebar:SetPoint("BOTTOMLEFT", settingsFrame, "BOTTOMLEFT", 10, 10)
@@ -203,7 +213,7 @@ function iSP:CreateOptionsPanel()
     -- ╭───────────────────────────────────────────────────────────────╮
     -- │                       Content Area                            │
     -- ╰───────────────────────────────────────────────────────────────╯
-    local contentArea = CreateFrame("Frame", nil, settingsFrame, "BackdropTemplate")
+    local contentArea = CreateFrame("Frame", nil, settingsFrame, BACKDROP_TEMPLATE)
     contentArea:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 6, 0)
     contentArea:SetPoint("BOTTOMRIGHT", settingsFrame, "BOTTOMRIGHT", -10, 10)
     contentArea:SetBackdrop({
@@ -512,7 +522,7 @@ function iSP:CreateOptionsPanel()
         else
             for i, sound in ipairs(iSPSettings.SoundFiles) do
                 -- Create frame for each sound
-                local soundFrame = CreateFrame("Frame", nil, soundListContainer, "BackdropTemplate")
+                local soundFrame = CreateFrame("Frame", nil, soundListContainer, BACKDROP_TEMPLATE)
                 soundFrame:SetSize(500, 28)
                 soundFrame:SetPoint("TOPLEFT", soundListContainer, "TOPLEFT", 0, listY)
                 soundFrame:SetBackdrop({
@@ -598,7 +608,7 @@ function iSP:CreateOptionsPanel()
             for _, triggerID in ipairs(category.triggers) do
                 local meta = iSP.TriggerMeta[triggerID]
                 if meta then
-                    local triggerFrame = CreateFrame("Frame", nil, triggersContent, "BackdropTemplate")
+                    local triggerFrame = CreateFrame("Frame", nil, triggersContent, BACKDROP_TEMPLATE)
                     triggerFrame:SetSize(520, 90)
                     triggerFrame:SetPoint("TOPLEFT", triggersContent, "TOPLEFT", 20, y)
                     triggerFrame:SetBackdrop({
@@ -644,8 +654,12 @@ function iSP:CreateOptionsPanel()
                     descLabel:SetText(descText)
 
                     -- Enable checkbox (moved to top-right)
-                    local enableCB = CreateFrame("CheckButton", nil, triggerFrame, "InterfaceOptionsCheckButtonTemplate")
+                    local enableCB = CreateFrame("CheckButton", nil, triggerFrame, CHECKBOX_TEMPLATE)
                     enableCB:SetPoint("TOPRIGHT", triggerFrame, "TOPRIGHT", -80, -6)
+                    if not enableCB.Text then
+                        enableCB.Text = enableCB:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                        enableCB.Text:SetPoint("LEFT", enableCB, "RIGHT", 4, 0)
+                    end
                     enableCB.Text:SetText(L["Enabled"])
                     enableCB.Text:SetFontObject(GameFontNormalSmall)
 

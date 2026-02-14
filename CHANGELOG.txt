@@ -17,6 +17,23 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.2.3 - Retail PvP Kill Tracking & Game Version Fix
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- Retail 12.0+ PvP kill tracking using PARTY_KILL event
+- Achievement criteria workaround for hidden GUIDs in instanced PvP (BGs/Arenas)
+- Compares total killing blow count (achievement #1487) to detect YOUR kills
+- Open world: direct GUID comparison for precise detection
+- Added "Retail" to Game Version Detection
+
+[TECHNICAL]
+- Classic: unchanged — still uses COMBAT_LOG_EVENT_UNFILTERED + PARTY_KILL subevent
+- Retail: PARTY_KILL event + GetAchievementCriteriaInfoByID(1487, 0) baseline
+- issecretvalue() check for hidden GUIDs in instanced PvP
+- Credit: ErnestasBaltinas/hksounds for the achievement criteria technique
+
+═══════════════════════════════════════════════════════════
 Version 0.2.1.1 - Show Notifications setting
 ═══════════════════════════════════════════════════════════
 

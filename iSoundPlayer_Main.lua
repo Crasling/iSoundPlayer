@@ -164,22 +164,21 @@ end
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                               Game Version Detection                           │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
-local major, minor, patch = string.match(iSP.GameTocVersion, "(%d)(%d%d)(%d%d)")
-if major and minor and patch then
-    local gameTocNumber = tonumber(major) * 10000 + tonumber(minor) * 100 + tonumber(patch)
-    if gameTocNumber > 50000 and gameTocNumber < 59999 then
-        iSP.GameVersionName = "Classic MoP"
-    elseif gameTocNumber > 40000 and gameTocNumber < 49999 then
-        iSP.GameVersionName = "Classic Cata"
-    elseif gameTocNumber > 30000 and gameTocNumber < 39999 then
-        iSP.GameVersionName = "Classic WotLK"
-    elseif gameTocNumber > 20000 and gameTocNumber < 29999 then
-        iSP.GameVersionName = "Classic TBC"
-    elseif gameTocNumber > 10000 and gameTocNumber < 19999 then
-        iSP.GameVersionName = "Classic Era"
-    else
-        iSP.GameVersionName = "Unknown Version"
-    end
+local gameTocNumber = tonumber(iSP.GameTocVersion) or 0
+if gameTocNumber >= 120000 then
+    iSP.GameVersionName = "Retail WoW"
+elseif gameTocNumber > 50000 and gameTocNumber < 59999 then
+    iSP.GameVersionName = "Classic MoP"
+elseif gameTocNumber > 40000 and gameTocNumber < 49999 then
+    iSP.GameVersionName = "Classic Cata"
+elseif gameTocNumber > 30000 and gameTocNumber < 39999 then
+    iSP.GameVersionName = "Classic WotLK"
+elseif gameTocNumber > 20000 and gameTocNumber < 29999 then
+    iSP.GameVersionName = "Classic TBC"
+elseif gameTocNumber > 10000 and gameTocNumber < 19999 then
+    iSP.GameVersionName = "Classic Era"
+else
+    iSP.GameVersionName = "Unknown Version"
 end
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
@@ -597,28 +596,92 @@ local function OnEvent(self, event, ...)
         iSP:PlayTriggerSound("ENCOUNTER_END")
     elseif event == "BOSS_KILL" then
         iSP:PlayTriggerSound("BOSS_KILL")
-    elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
-        iSP:OnCombatLogEvent(CombatLogGetCurrentEventInfo())
     end
 end
 
--- Combat log event handler (for PvP kills)
-function iSP:OnCombatLogEvent(...)
-    local timestamp, subevent, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags,
-          destGUID, destName, destFlags, destRaidFlags = ...
+-- PvP kill tracking — version-split for Classic vs Retail
+local _, _, _, tocVersion = GetBuildInfo()
 
-    -- Check if player killed another player
-    if subevent == "PARTY_KILL" then
-        local playerGUID = UnitGUID("player")
+if tocVersion and tocVersion < 100000 then
+    -- ── Classic: use COMBAT_LOG_EVENT_UNFILTERED for precise kill detection ──
+    local pvpKillFrame = CreateFrame("Frame")
+    pvpKillFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    pvpKillFrame:SetScript("OnEvent", function()
+        local timestamp, subevent, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags,
+              destGUID, destName, destFlags, destRaidFlags = CombatLogGetCurrentEventInfo()
 
-        -- Player got the killing blow on another player
-        if sourceGUID == playerGUID and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 then
-            -- Check if it's an honorable kill
-            if bit.band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) > 0 then
-                self:OnHonorableKill()
+        if subevent == "PARTY_KILL" then
+            local playerGUID = UnitGUID("player")
+            if sourceGUID == playerGUID and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 then
+                if bit.band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) > 0 then
+                    iSP:OnHonorableKill()
+                end
             end
         end
+    end)
+else
+    -- ── Retail 12.0+: use PARTY_KILL event + achievement criteria workaround ──
+    -- Blizzard blocks COMBAT_LOG_EVENT_UNFILTERED for addons in retail.
+    -- PARTY_KILL event still fires but hides attacker GUID as <secret> in instances.
+    -- Workaround: compare total killing blow count (achievement criteria 1487) before/after.
+    -- Credit: ErnestasBaltinas/hksounds for the technique.
+
+    local pvpKillFrame = CreateFrame("Frame")
+    local baselineKillCount = 0
+
+    -- Get player's total killing blows from achievement statistics
+    local function GetTotalKillCount()
+        local _, _, _, _, _, _, _, _, killCount = GetAchievementCriteriaInfoByID(1487, 0)
+        return killCount or 0
     end
+
+    -- Check if a GUID is hidden (secret) by Blizzard
+    local function IsGUIDSecret(guid)
+        return issecretvalue and issecretvalue(guid)
+    end
+
+    -- Check if the target is a player (not NPC)
+    local function IsTargetPlayer(guid)
+        if not guid then return false end
+        if IsGUIDSecret(guid) then
+            -- In instances, target GUID might also be secret — assume player in PvP context
+            return true
+        end
+        return guid:find("^Player%-") ~= nil
+    end
+
+    -- Determine if WE got the killing blow
+    local function WasKilledByPlayer(attackerGUID)
+        if IsGUIDSecret(attackerGUID) then
+            -- GUID is hidden (instanced PvP) — check if our kill count increased
+            local currentKills = GetTotalKillCount()
+            if currentKills > baselineKillCount then
+                baselineKillCount = currentKills
+                return true
+            end
+            return false
+        end
+        -- Open world: direct GUID comparison
+        return attackerGUID == UnitGUID("player")
+    end
+
+    -- Initialize baseline on login
+    pvpKillFrame:RegisterEvent("PLAYER_LOGIN")
+    pvpKillFrame:RegisterEvent("PARTY_KILL")
+
+    pvpKillFrame:SetScript("OnEvent", function(self, event, ...)
+        if event == "PLAYER_LOGIN" then
+            baselineKillCount = GetTotalKillCount()
+            if iSPSettings and iSPSettings.DebugMode then
+                print(L["DebugInfo"] .. "Retail PvP: Baseline kill count = " .. baselineKillCount)
+            end
+        elseif event == "PARTY_KILL" then
+            local attackerGUID, targetGUID = ...
+            if WasKilledByPlayer(attackerGUID) and IsTargetPlayer(targetGUID) then
+                iSP:OnHonorableKill()
+            end
+        end
+    end)
 end
 
 eventFrame:SetScript("OnEvent", OnEvent)
@@ -626,7 +689,6 @@ eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")  -- For PvP kill tracking
 
 -- Register trigger events
 function iSP:RegisterTriggerEvents()
@@ -724,7 +786,9 @@ function iSP:OnAddonLoaded()
     local gameName = "Unknown"
     local tocVersion = iSP.GameTocVersion or 0
 
-    if tocVersion >= 50000 and tocVersion < 60000 then
+    if tocVersion >= 120000 then
+        gameName = "Retail WoW"
+    elseif tocVersion >= 50000 and tocVersion < 60000 then
         gameName = "Classic MoP"
     elseif tocVersion >= 40000 and tocVersion < 50000 then
         gameName = "Classic Cata"
@@ -842,7 +906,7 @@ end
 
 -- Create styled frame (used by options panel)
 function iSP:CreateiSPStyleFrame(parent, width, height, point, name)
-    local frame = CreateFrame("Frame", name, parent, "BackdropTemplate")
+    local frame = CreateFrame("Frame", name, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
     frame:SetSize(width, height)
     if point then
         frame:SetPoint(unpack(point))
