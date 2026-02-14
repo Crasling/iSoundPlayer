@@ -596,173 +596,582 @@ function iSP:CreateOptionsPanel()
 
     y = y - 8
 
-    -- Loop through all trigger categories
-    if iSP.TriggerCategories then
-        for _, category in ipairs(iSP.TriggerCategories) do
-            -- Category header
-            _, y = CreateSectionHeader(triggersContent,
-                Colors.iSP .. category.name .. "|r |cFF808080- " .. category.desc .. "|r",
-                y)
+    -- Search box
+    local searchBox = CreateFrame("EditBox", nil, triggersContent, "InputBoxTemplate")
+    searchBox:SetSize(250, 22)
+    searchBox:SetPoint("TOPLEFT", triggersContent, "TOPLEFT", 25, y)
+    searchBox:SetAutoFocus(false)
+    searchBox:SetFontObject(GameFontHighlight)
+    searchBox:SetMaxLetters(50)
 
-            -- Loop through triggers in this category
-            for _, triggerID in ipairs(category.triggers) do
-                local meta = iSP.TriggerMeta[triggerID]
-                if meta then
-                    local triggerFrame = CreateFrame("Frame", nil, triggersContent, BACKDROP_TEMPLATE)
-                    triggerFrame:SetSize(520, 90)
-                    triggerFrame:SetPoint("TOPLEFT", triggersContent, "TOPLEFT", 20, y)
-                    triggerFrame:SetBackdrop({
-                        bgFile = "Interface\\BUTTONS\\WHITE8X8",
-                        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                        edgeSize = 8,
-                        insets = {left = 2, right = 2, top = 2, bottom = 2},
-                    })
-                    triggerFrame:SetBackdropColor(0.08, 0.08, 0.1, 0.8)
-                    triggerFrame:SetBackdropBorderColor(0.4, 0.4, 0.5, 0.6)
+    local searchPlaceholder = triggersContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    searchPlaceholder:SetPoint("LEFT", searchBox, "LEFT", 6, 0)
+    searchPlaceholder:SetText(L["SearchTriggers"])
 
-                    -- Trigger icon
-                    if meta.icon then
-                        local icon = triggerFrame:CreateTexture(nil, "ARTWORK")
-                        icon:SetSize(24, 24)
-                        icon:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 6, -6)
+    -- Hide placeholder when typing
+    searchBox:SetScript("OnEditFocusGained", function() searchPlaceholder:Hide() end)
+    searchBox:SetScript("OnEditFocusLost", function()
+        if searchBox:GetText() == "" then searchPlaceholder:Show() end
+    end)
 
-                        -- Try to set the texture, use fallback if it fails
-                        local success = icon:SetTexture(meta.icon)
-                        if not success then
-                            -- Fallback to a generic icon if the specified one doesn't exist
-                            icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-                        end
+    y = y - 30
 
-                        -- Add border to icon
-                        icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-                    end
+    -- Collapse/expand state and frame storage
+    local categoryCollapsed = {}
+    local triggerFrameCache = {}  -- triggerID -> frame (created once, reused)
+    local categoryHeaderCache = {}  -- categoryID -> {frame, arrow, countLabel, checkbox}
+    local searchText = ""
+    local triggersStartY = y
 
-                    -- Trigger name
-                    local nameLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    nameLabel:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 36, -8)
-                    nameLabel:SetText(Colors.iSP .. meta.name)
+    -- ╭───────────────────────────────────────────────────────────────────────────────╮
+    -- │                          Sound Picker Popup (Singleton)                      │
+    -- ╰───────────────────────────────────────────────────────────────────────────────╯
+    local soundPicker = CreateFrame("Frame", "iSP_SoundPicker", UIParent, BACKDROP_TEMPLATE)
+    soundPicker:SetSize(260, 300)
+    soundPicker:SetFrameStrata("DIALOG")
+    soundPicker:SetFrameLevel(100)
+    soundPicker:SetBackdrop({
+        bgFile = "Interface\\BUTTONS\\WHITE8X8",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        edgeSize = 10,
+        insets = {left = 3, right = 3, top = 3, bottom = 3},
+    })
+    soundPicker:SetBackdropColor(0.06, 0.06, 0.08, 0.95)
+    soundPicker:SetBackdropBorderColor(1, 0.59, 0.09, 0.7)
+    soundPicker:SetClampedToScreen(true)
+    soundPicker:Hide()
+    soundPicker:EnableMouse(true)
 
-                    -- Trigger description with threshold inline
-                    local descLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-                    descLabel:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -2)
+    -- Close on Escape
+    tinsert(UISpecialFrames, "iSP_SoundPicker")
 
-                    -- Build description text with threshold if available
-                    local descText = meta.desc
-                    if meta.threshold then
-                        descText = descText .. " |cFF808080(Threshold: " .. meta.threshold .. " kills)|r"
-                    end
-                    descLabel:SetText(descText)
+    -- Picker state
+    soundPicker.activeTriggerID = nil
+    soundPicker.activeDropdown = nil
 
-                    -- Enable checkbox (moved to top-right)
-                    local enableCB = CreateFrame("CheckButton", nil, triggerFrame, CHECKBOX_TEMPLATE)
-                    enableCB:SetPoint("TOPRIGHT", triggerFrame, "TOPRIGHT", -80, -6)
-                    if not enableCB.Text then
-                        enableCB.Text = enableCB:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                        enableCB.Text:SetPoint("LEFT", enableCB, "RIGHT", 4, 0)
-                    end
-                    enableCB.Text:SetText(L["Enabled"])
-                    enableCB.Text:SetFontObject(GameFontNormalSmall)
+    -- Search box inside picker
+    local pickerSearch = CreateFrame("EditBox", nil, soundPicker, "InputBoxTemplate")
+    pickerSearch:SetSize(230, 22)
+    pickerSearch:SetPoint("TOPLEFT", soundPicker, "TOPLEFT", 14, -10)
+    pickerSearch:SetAutoFocus(false)
+    pickerSearch:SetFontObject(GameFontHighlight)
+    pickerSearch:SetMaxLetters(50)
 
-                    if iSPSettings.Triggers[triggerID] then
-                        enableCB:SetChecked(iSPSettings.Triggers[triggerID].enabled)
-                    end
+    local pickerPlaceholder = soundPicker:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    pickerPlaceholder:SetPoint("LEFT", pickerSearch, "LEFT", 6, 0)
+    pickerPlaceholder:SetText(L["SearchSounds"])
 
-                    enableCB:SetScript("OnClick", function(self)
-                        if iSPSettings.Triggers[triggerID] then
-                            iSPSettings.Triggers[triggerID].enabled = self:GetChecked() and true or false
-                        end
-                    end)
+    pickerSearch:SetScript("OnEditFocusGained", function() pickerPlaceholder:Hide() end)
+    pickerSearch:SetScript("OnEditFocusLost", function()
+        if pickerSearch:GetText() == "" then pickerPlaceholder:Show() end
+    end)
+    pickerSearch:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+        soundPicker:Hide()
+    end)
 
-                    -- Sound selection label
-                    local soundLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    soundLabel:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 10, -48)
-                    soundLabel:SetText(L["SoundLabel"])
+    -- Scroll frame for sound list
+    local pickerScroll = CreateFrame("ScrollFrame", nil, soundPicker, "UIPanelScrollFrameTemplate")
+    pickerScroll:SetPoint("TOPLEFT", soundPicker, "TOPLEFT", 6, -38)
+    pickerScroll:SetPoint("BOTTOMRIGHT", soundPicker, "BOTTOMRIGHT", -26, 6)
 
-                    -- Sound dropdown button
-                    local soundDropdown = CreateFrame("Button", nil, triggerFrame, "UIPanelButtonTemplate")
-                    soundDropdown:SetSize(200, 22)
-                    soundDropdown:SetPoint("LEFT", soundLabel, "RIGHT", 5, 0)
+    local pickerScrollChild = CreateFrame("Frame", nil, pickerScroll)
+    pickerScrollChild:SetWidth(220)
+    pickerScrollChild:SetHeight(1)
+    pickerScroll:SetScrollChild(pickerScrollChild)
 
-                    -- Get current sound or "None"
-                    local currentSound = ""
-                    if iSPSettings.Triggers[triggerID] then
-                        currentSound = iSPSettings.Triggers[triggerID].sound
-                    end
-                    if not currentSound or currentSound == "" then
-                        soundDropdown:SetText(L["None"])
-                    else
-                        soundDropdown:SetText(currentSound)
-                    end
+    -- Sound row cache
+    local soundRowCache = {}
+    local ROW_HEIGHT = 20
 
-                    soundDropdown:SetScript("OnClick", function(self)
-                        -- Check if any sounds are registered
-                        if not iSPSettings.SoundFiles or #iSPSettings.SoundFiles == 0 then
-                            print(L["DebugWarning"] .. L["NoSoundsWarning"])
-                            return
-                        end
+    local function CreateSoundRow(index)
+        local row = CreateFrame("Button", nil, pickerScrollChild)
+        row:SetSize(220, ROW_HEIGHT)
 
-                        -- Create temporary dropdown frame
-                        local menuFrame = CreateFrame("Frame", "iSP_TriggerSoundMenu_" .. triggerID, UIParent, "UIDropDownMenuTemplate")
+        -- Highlight on hover
+        local highlight = row:CreateTexture(nil, "HIGHLIGHT")
+        highlight:SetAllPoints()
+        highlight:SetColorTexture(1, 0.59, 0.09, 0.15)
 
-                        -- Initialize function for dropdown
-                        local function InitializeDropdown(frame, level)
-                            local info = UIDropDownMenu_CreateInfo()
+        -- Checkmark
+        local check = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        check:SetPoint("LEFT", row, "LEFT", 4, 0)
+        check:SetText("|cFF00FF00✓|r")
+        check:Hide()
+        row.check = check
 
-                            -- Add "None" option
-                            info.text = L["None"]
-                            info.func = function()
-                                iSPSettings.Triggers[triggerID].sound = ""
-                                soundDropdown:SetText(L["None"])
-                            end
-                            info.checked = (iSPSettings.Triggers[triggerID].sound == "")
-                            UIDropDownMenu_AddButton(info)
+        -- Sound name label
+        local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        label:SetPoint("LEFT", row, "LEFT", 18, 0)
+        label:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        label:SetJustifyH("LEFT")
+        row.label = label
 
-                            -- Add all registered sounds
-                            for _, sound in ipairs(iSPSettings.SoundFiles) do
-                                info = UIDropDownMenu_CreateInfo()
-                                info.text = sound
-                                info.func = function()
-                                    iSPSettings.Triggers[triggerID].sound = sound
-                                    soundDropdown:SetText(sound)
-                                end
-                                info.checked = (iSPSettings.Triggers[triggerID].sound == sound)
-                                UIDropDownMenu_AddButton(info)
-                            end
-                        end
-
-                        UIDropDownMenu_Initialize(menuFrame, InitializeDropdown, "MENU")
-                        ToggleDropDownMenu(1, nil, menuFrame, "cursor", 0, 0)
-                    end)
-
-                    -- Test sound button
-                    local testSoundBtn = CreateFrame("Button", nil, triggerFrame, "UIPanelButtonTemplate")
-                    testSoundBtn:SetSize(50, 22)
-                    testSoundBtn:SetPoint("LEFT", soundDropdown, "RIGHT", 5, 0)
-                    testSoundBtn:SetText(L["TestBtn"])
-                    testSoundBtn:SetScript("OnClick", function()
-                        local sound = iSPSettings.Triggers[triggerID].sound
-                        if sound and sound ~= "" then
-                            iSP:TestSound(sound)
-                        else
-                            print(L["DebugError"] .. L["NoSoundSelected"])
-                        end
-                    end)
-
-                    y = y - 94
+        row:SetScript("OnClick", function(self)
+            local triggerID = soundPicker.activeTriggerID
+            local dropdown = soundPicker.activeDropdown
+            if triggerID and dropdown then
+                local soundName = self.soundName
+                if soundName == "" then
+                    iSPSettings.Triggers[triggerID].sound = ""
+                    dropdown:SetText(L["None"])
+                else
+                    iSPSettings.Triggers[triggerID].sound = soundName
+                    dropdown:SetText(soundName)
                 end
             end
+            soundPicker:Hide()
+        end)
 
-            y = y - 4  -- Extra spacing between categories
-        end
-    else
-        -- Fallback if TriggerData.lua not loaded yet
-        local errorText = triggersContent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        errorText:SetPoint("TOP", triggersContent, "TOP", 0, y)
-        errorText:SetText(L["TriggerDataError"])
-        y = y - 30
+        return row
     end
 
-    scrollChildren[3]:SetHeight(math.abs(y) + 20)
+    local function RefreshSoundPicker()
+        local triggerID = soundPicker.activeTriggerID
+        if not triggerID then return end
+
+        local filter = pickerSearch:GetText():lower()
+        local currentSound = ""
+        if iSPSettings.Triggers[triggerID] then
+            currentSound = iSPSettings.Triggers[triggerID].sound or ""
+        end
+
+        -- Build filtered sound list: "None" first, then matching sounds
+        local filteredSounds = {}
+        if filter == "" or string.find(L["None"]:lower(), filter, 1, true) then
+            table.insert(filteredSounds, "")  -- "" represents "None"
+        end
+        if iSPSettings.SoundFiles then
+            for _, sound in ipairs(iSPSettings.SoundFiles) do
+                if filter == "" or string.find(sound:lower(), filter, 1, true) then
+                    table.insert(filteredSounds, sound)
+                end
+            end
+        end
+
+        -- Ensure enough rows exist
+        for i = #soundRowCache + 1, #filteredSounds do
+            soundRowCache[i] = CreateSoundRow(i)
+        end
+
+        -- Position and show matching rows, hide the rest
+        for i, soundName in ipairs(filteredSounds) do
+            local row = soundRowCache[i]
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", pickerScrollChild, "TOPLEFT", 0, -((i - 1) * ROW_HEIGHT))
+            row:Show()
+
+            row.soundName = soundName
+            if soundName == "" then
+                row.label:SetText(Colors.Gray .. L["None"])
+            else
+                row.label:SetText(soundName)
+            end
+
+            -- Show checkmark on currently selected sound
+            if soundName == currentSound then
+                row.check:Show()
+            else
+                row.check:Hide()
+            end
+        end
+
+        -- Hide unused rows
+        for i = #filteredSounds + 1, #soundRowCache do
+            soundRowCache[i]:Hide()
+        end
+
+        -- Update scroll height
+        local totalHeight = #filteredSounds * ROW_HEIGHT
+        pickerScrollChild:SetHeight(math.max(totalHeight, 1))
+
+        -- Resize picker height based on content (min 80, max 300)
+        local contentHeight = totalHeight + 48  -- 38 for search + 10 padding
+        local pickerHeight = math.max(80, math.min(contentHeight, 300))
+        soundPicker:SetHeight(pickerHeight)
+    end
+
+    pickerSearch:SetScript("OnTextChanged", function(self)
+        RefreshSoundPicker()
+    end)
+
+    -- Close picker when clicking elsewhere (click-outside detection)
+    soundPicker:SetScript("OnHide", function()
+        pickerSearch:SetText("")
+        pickerPlaceholder:Show()
+        pickerSearch:ClearFocus()
+    end)
+
+    -- Use OnUpdate to detect clicks outside the picker
+    soundPicker:SetScript("OnUpdate", function(self)
+        if not self:IsShown() then return end
+        if IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton") then
+            if not self:IsMouseOver() then
+                self:Hide()
+            end
+        end
+    end)
+
+    -- Public function to open the picker anchored to a dropdown button
+    local function OpenSoundPicker(dropdown, triggerID)
+        if not iSPSettings.SoundFiles or #iSPSettings.SoundFiles == 0 then
+            print(L["DebugWarning"] .. L["NoSoundsWarning"])
+            return
+        end
+
+        soundPicker.activeTriggerID = triggerID
+        soundPicker.activeDropdown = dropdown
+
+        -- Position below the dropdown button
+        soundPicker:ClearAllPoints()
+        soundPicker:SetPoint("TOPLEFT", dropdown, "BOTTOMLEFT", 0, -2)
+
+        pickerSearch:SetText("")
+        pickerPlaceholder:Show()
+
+        soundPicker:Show()
+        RefreshSoundPicker()
+        pickerSearch:SetFocus()
+    end
+
+    -- Create a single trigger frame (called once per trigger, then reused)
+    local function CreateTriggerFrame(triggerID, meta)
+        local triggerFrame = CreateFrame("Frame", nil, triggersContent, BACKDROP_TEMPLATE)
+        triggerFrame:SetSize(520, 90)
+        triggerFrame:SetBackdrop({
+            bgFile = "Interface\\BUTTONS\\WHITE8X8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 8,
+            insets = {left = 2, right = 2, top = 2, bottom = 2},
+        })
+        triggerFrame:SetBackdropColor(0.08, 0.08, 0.1, 0.8)
+        triggerFrame:SetBackdropBorderColor(0.4, 0.4, 0.5, 0.6)
+
+        -- Trigger icon
+        if meta.icon then
+            local icon = triggerFrame:CreateTexture(nil, "ARTWORK")
+            icon:SetSize(24, 24)
+            icon:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 6, -6)
+            local success = icon:SetTexture(meta.icon)
+            if not success then
+                icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+            end
+            icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        end
+
+        -- Trigger name
+        local nameLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        nameLabel:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 36, -8)
+        nameLabel:SetText(Colors.iSP .. meta.name)
+
+        -- Trigger description with threshold and cooldown inline
+        local descLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        descLabel:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -2)
+
+        local descText = meta.desc
+        if meta.threshold then
+            descText = descText .. " |cFF808080(Threshold: " .. meta.threshold .. " kills)|r"
+        end
+        if meta.cooldown and meta.cooldown > 0 then
+            descText = descText .. " |cFF808080(Cooldown: " .. meta.cooldown .. "s)|r"
+        end
+        descLabel:SetText(descText)
+
+        -- Enable checkbox
+        local enableCB = CreateFrame("CheckButton", nil, triggerFrame, CHECKBOX_TEMPLATE)
+        enableCB:SetPoint("TOPRIGHT", triggerFrame, "TOPRIGHT", -80, -6)
+        if not enableCB.Text then
+            enableCB.Text = enableCB:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            enableCB.Text:SetPoint("LEFT", enableCB, "RIGHT", 4, 0)
+        end
+        enableCB.Text:SetText(L["Enabled"])
+        enableCB.Text:SetFontObject(GameFontNormalSmall)
+
+        if iSPSettings.Triggers[triggerID] then
+            enableCB:SetChecked(iSPSettings.Triggers[triggerID].enabled)
+        end
+
+        enableCB:SetScript("OnClick", function(self)
+            if iSPSettings.Triggers[triggerID] then
+                iSPSettings.Triggers[triggerID].enabled = self:GetChecked() and true or false
+            end
+        end)
+
+        -- Sound selection label
+        local soundLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        soundLabel:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 10, -48)
+        soundLabel:SetText(L["SoundLabel"])
+
+        -- Sound dropdown button
+        local soundDropdown = CreateFrame("Button", nil, triggerFrame, "UIPanelButtonTemplate")
+        soundDropdown:SetSize(200, 22)
+        soundDropdown:SetPoint("LEFT", soundLabel, "RIGHT", 5, 0)
+
+        local currentSound = ""
+        if iSPSettings.Triggers[triggerID] then
+            currentSound = iSPSettings.Triggers[triggerID].sound
+        end
+        if not currentSound or currentSound == "" then
+            soundDropdown:SetText(L["None"])
+        else
+            soundDropdown:SetText(currentSound)
+        end
+
+        soundDropdown:SetScript("OnClick", function(self)
+            OpenSoundPicker(self, triggerID)
+        end)
+
+        -- Test sound button
+        local testSoundBtn = CreateFrame("Button", nil, triggerFrame, "UIPanelButtonTemplate")
+        testSoundBtn:SetSize(50, 22)
+        testSoundBtn:SetPoint("LEFT", soundDropdown, "RIGHT", 5, 0)
+        testSoundBtn:SetText(L["TestBtn"])
+        testSoundBtn:SetScript("OnClick", function()
+            local sound = iSPSettings.Triggers[triggerID].sound
+            if sound and sound ~= "" then
+                iSP:TestSound(sound)
+            else
+                print(L["DebugError"] .. L["NoSoundSelected"])
+            end
+        end)
+
+        triggerFrame.enableCB = enableCB
+        triggerFrame.soundDropdown = soundDropdown
+
+        return triggerFrame
+    end
+
+    -- Create a category header frame (called once per category, then reused)
+    local function CreateCategoryHeader(category)
+        local headerFrame = CreateFrame("Button", nil, triggersContent, BACKDROP_TEMPLATE)
+        headerFrame:SetHeight(28)
+        headerFrame:SetBackdrop({
+            bgFile = "Interface\\BUTTONS\\WHITE8X8",
+        })
+        headerFrame:SetBackdropColor(0.15, 0.15, 0.2, 0.8)
+
+        -- Collapse/expand arrow
+        local arrow = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        arrow:SetPoint("LEFT", headerFrame, "LEFT", 8, 0)
+        arrow:SetText("-")
+
+        -- Category icon
+        local catIcon = headerFrame:CreateTexture(nil, "ARTWORK")
+        catIcon:SetSize(18, 18)
+        catIcon:SetPoint("LEFT", arrow, "RIGHT", 6, 0)
+        catIcon:SetTexture(category.icon)
+        catIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        -- Category name + count label
+        local catLabel = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        catLabel:SetPoint("LEFT", catIcon, "RIGHT", 6, 0)
+
+        -- Category-level enable/disable checkbox
+        local catCB = CreateFrame("CheckButton", nil, headerFrame, CHECKBOX_TEMPLATE)
+        catCB:SetPoint("RIGHT", headerFrame, "RIGHT", -8, 0)
+        catCB:SetSize(20, 20)
+        if not catCB.Text then
+            catCB.Text = catCB:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            catCB.Text:SetPoint("LEFT", catCB, "RIGHT", 2, 0)
+        end
+        catCB.Text:SetText("")
+
+        -- Accent line at bottom
+        local accent = headerFrame:CreateTexture(nil, "ARTWORK")
+        accent:SetHeight(1)
+        accent:SetPoint("BOTTOMLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
+        accent:SetPoint("BOTTOMRIGHT", headerFrame, "BOTTOMRIGHT", 0, 0)
+        accent:SetColorTexture(1, 0.59, 0.09, 0.4)
+
+        return {
+            frame = headerFrame,
+            arrow = arrow,
+            catLabel = catLabel,
+            catCB = catCB,
+        }
+    end
+
+    -- RenderTriggers — repositions and shows/hides frames based on collapse + search state
+    local function RenderTriggers()
+        local currentY = triggersStartY
+
+        if not iSP.TriggerCategories then
+            scrollChildren[3]:SetHeight(math.abs(currentY) + 40)
+            return
+        end
+
+        for _, category in ipairs(iSP.TriggerCategories) do
+            -- Skip categories with no available triggers for this version
+            if not iSP:IsCategoryAvailable(category.id) then
+                -- Hide cached header if it exists
+                if categoryHeaderCache[category.id] then
+                    categoryHeaderCache[category.id].frame:Hide()
+                end
+                -- Hide cached trigger frames
+                for _, triggerID in ipairs(category.triggers) do
+                    if triggerFrameCache[triggerID] then
+                        triggerFrameCache[triggerID]:Hide()
+                    end
+                end
+            else
+                local availableTriggers = iSP:GetAvailableTriggersInCategory(category.id)
+
+                -- Filter by search text
+                local filteredTriggers = {}
+                if searchText ~= "" then
+                    local searchLower = string.lower(searchText)
+                    for _, triggerID in ipairs(availableTriggers) do
+                        local meta = iSP.TriggerMeta[triggerID]
+                        if meta then
+                            if string.find(string.lower(meta.name), searchLower, 1, true)
+                               or string.find(string.lower(meta.desc), searchLower, 1, true)
+                               or string.find(string.lower(triggerID), searchLower, 1, true) then
+                                table.insert(filteredTriggers, triggerID)
+                            end
+                        end
+                    end
+                else
+                    filteredTriggers = availableTriggers
+                end
+
+                -- Skip category if no triggers match search
+                if #filteredTriggers == 0 and searchText ~= "" then
+                    if categoryHeaderCache[category.id] then
+                        categoryHeaderCache[category.id].frame:Hide()
+                    end
+                    for _, triggerID in ipairs(availableTriggers) do
+                        if triggerFrameCache[triggerID] then
+                            triggerFrameCache[triggerID]:Hide()
+                        end
+                    end
+                else
+                    -- ── Category Header ──
+                    if not categoryHeaderCache[category.id] then
+                        categoryHeaderCache[category.id] = CreateCategoryHeader(category)
+                    end
+
+                    local header = categoryHeaderCache[category.id]
+                    local isCollapsed = categoryCollapsed[category.id]
+
+                    -- Update arrow
+                    header.arrow:SetText(isCollapsed and "+" or "-")
+
+                    -- Update enabled count
+                    local enabledCount = 0
+                    for _, tid in ipairs(availableTriggers) do
+                        if iSPSettings.Triggers[tid] and iSPSettings.Triggers[tid].enabled then
+                            enabledCount = enabledCount + 1
+                        end
+                    end
+                    header.catLabel:SetText(Colors.iSP .. category.name .. "|r "
+                        .. Colors.Gray .. "(" .. enabledCount .. "/" .. #availableTriggers .. " enabled)|r")
+
+                    -- Update category checkbox state
+                    local allEnabled = #availableTriggers > 0
+                    for _, tid in ipairs(availableTriggers) do
+                        if not iSPSettings.Triggers[tid] or not iSPSettings.Triggers[tid].enabled then
+                            allEnabled = false
+                            break
+                        end
+                    end
+                    header.catCB:SetChecked(allEnabled)
+
+                    -- Category checkbox click handler
+                    header.catCB:SetScript("OnClick", function(self)
+                        local checked = self:GetChecked() and true or false
+                        for _, tid in ipairs(availableTriggers) do
+                            if iSPSettings.Triggers[tid] then
+                                iSPSettings.Triggers[tid].enabled = checked
+                            end
+                        end
+                        RenderTriggers()
+                    end)
+
+                    -- Header click handler (collapse/expand)
+                    header.frame:SetScript("OnClick", function(self, button)
+                        categoryCollapsed[category.id] = not categoryCollapsed[category.id]
+                        RenderTriggers()
+                    end)
+
+                    -- Position header
+                    header.frame:ClearAllPoints()
+                    header.frame:SetPoint("TOPLEFT", triggersContent, "TOPLEFT", 10, currentY)
+                    header.frame:SetPoint("TOPRIGHT", triggersContent, "TOPRIGHT", -10, currentY)
+                    header.frame:Show()
+
+                    currentY = currentY - 30
+
+                    -- ── Trigger frames (if not collapsed) ──
+                    if not isCollapsed then
+                        for _, triggerID in ipairs(filteredTriggers) do
+                            local meta = iSP.TriggerMeta[triggerID]
+                            if meta then
+                                -- Create frame once, reuse on subsequent renders
+                                if not triggerFrameCache[triggerID] then
+                                    triggerFrameCache[triggerID] = CreateTriggerFrame(triggerID, meta)
+                                end
+
+                                local tf = triggerFrameCache[triggerID]
+
+                                -- Update checkbox state (may have changed from category toggle)
+                                if tf.enableCB and iSPSettings.Triggers[triggerID] then
+                                    tf.enableCB:SetChecked(iSPSettings.Triggers[triggerID].enabled)
+                                end
+
+                                -- Update sound dropdown text
+                                if tf.soundDropdown and iSPSettings.Triggers[triggerID] then
+                                    local cs = iSPSettings.Triggers[triggerID].sound
+                                    if not cs or cs == "" then
+                                        tf.soundDropdown:SetText(L["None"])
+                                    else
+                                        tf.soundDropdown:SetText(cs)
+                                    end
+                                end
+
+                                -- Position and show
+                                tf:ClearAllPoints()
+                                tf:SetPoint("TOPLEFT", triggersContent, "TOPLEFT", 20, currentY)
+                                tf:Show()
+
+                                currentY = currentY - 94
+                            end
+                        end
+                    end
+
+                    -- Hide triggers that are filtered out or collapsed
+                    for _, triggerID in ipairs(availableTriggers) do
+                        local isVisible = false
+                        if not isCollapsed then
+                            for _, fid in ipairs(filteredTriggers) do
+                                if fid == triggerID then isVisible = true; break end
+                            end
+                        end
+                        if not isVisible and triggerFrameCache[triggerID] then
+                            triggerFrameCache[triggerID]:Hide()
+                        end
+                    end
+
+                    currentY = currentY - 4  -- Category spacing
+                end
+            end
+        end
+
+        scrollChildren[3]:SetHeight(math.abs(currentY) + 20)
+    end
+
+    -- Connect search box to re-render
+    searchBox:SetScript("OnTextChanged", function(self)
+        searchText = self:GetText() or ""
+        if searchText == "" then
+            searchPlaceholder:Show()
+        else
+            searchPlaceholder:Hide()
+        end
+        RenderTriggers()
+    end)
+
+    -- Initial render
+    RenderTriggers()
 
     -- ╭───────────────────────────────────────────────────────────────╮
     -- │                       About Tab Content                       │

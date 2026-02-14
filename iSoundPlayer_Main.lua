@@ -50,7 +50,7 @@ iSP.CONSTANTS = {
     MIN_SOUND_NAME_LENGTH = 3,
 
     -- Trigger Limits
-    MAX_TRIGGERS = 50,
+    MAX_TRIGGERS = 100,
 
     -- Volume
     MIN_VOLUME = 0.0,
@@ -96,37 +96,48 @@ iSP.SettingsDefault = {
 
     -- Triggers
     Triggers = {
+        -- Trigger defaults are auto-filled from TriggerMeta in InitializeSettings()
+        -- Explicit defaults below serve as documentation and initial values
+
         -- Player Events
-        PLAYER_LOGIN = {
-            enabled = false,
-            sound = "",
-            duration = 0,      -- 0 = play full sound, otherwise seconds
-            startOffset = 0,   -- Start playback from X seconds
-            loop = false,      -- Loop the sound
-            loopCount = 1,     -- How many times to loop (if loop = true)
-            fadeIn = false,    -- Fade in effect
-            fadeOut = false,   -- Fade out effect
-        },
+        PLAYER_LOGIN = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PLAYER_LEVEL_UP = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PLAYER_DEAD = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PLAYER_ALIVE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PLAYER_UNGHOST = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_XP_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_MONEY = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_CONTROL_LOST = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_CONTROL_GAINED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_EQUIPMENT_CHANGED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_STARTED_MOVING = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_STOPPED_MOVING = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
 
         -- Combat Events
         PLAYER_REGEN_DISABLED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PLAYER_REGEN_ENABLED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PLAYER_TARGET_CHANGED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        UNIT_SPELLCAST_START = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        UNIT_SPELLCAST_SUCCEEDED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        UNIT_SPELLCAST_INTERRUPTED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        UPDATE_SHAPESHIFT_FORM = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
 
         -- Achievement & Quest Events
         ACHIEVEMENT_EARNED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         QUEST_COMPLETE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         QUEST_ACCEPTED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         QUEST_TURNED_IN = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CRITERIA_COMPLETE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        QUEST_LOG_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
 
         -- Loot & Items
         LOOT_READY = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         LOOT_OPENED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         LOOT_CLOSED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHAT_MSG_LOOT = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHAT_MSG_MONEY = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        START_LOOT_ROLL = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        ENCOUNTER_LOOT_RECEIVED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
 
         -- Group & Social
         GROUP_JOINED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
@@ -134,6 +145,15 @@ iSP.SettingsDefault = {
         GROUP_ROSTER_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         READY_CHECK = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         READY_CHECK_CONFIRM = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PARTY_INVITE_REQUEST = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PARTY_LEADER_CHANGED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHAT_MSG_WHISPER = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHAT_MSG_GUILD = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHAT_MSG_PARTY = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHAT_MSG_RAID = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        FRIENDLIST_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        GUILD_MOTD = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PLAYER_GUILD_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
 
         -- Dungeon & Raid
         PLAYER_ENTERING_WORLD = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
@@ -141,6 +161,8 @@ iSP.SettingsDefault = {
         ENCOUNTER_START = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         ENCOUNTER_END = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         BOSS_KILL = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        INSTANCE_LOCK_WARNING = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHALLENGE_MODE_COMPLETED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
 
         -- PvP Events
         PVP_HONORABLE_KILL = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
@@ -151,6 +173,31 @@ iSP.SettingsDefault = {
         PVP_DOMINATING = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PVP_UNSTOPPABLE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PVP_GODLIKE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+
+        -- Profession & Crafting
+        TRADE_SHOW = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        TRADE_CLOSED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        TRADE_ACCEPT_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CHAT_MSG_SKILL = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+
+        -- Economy & Mail
+        MAIL_SHOW = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        MAIL_CLOSED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        MAIL_INBOX_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        MAIL_SEND_SUCCESS = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        UPDATE_PENDING_MAIL = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        AUCTION_HOUSE_SHOW = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        AUCTION_HOUSE_CLOSED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+
+        -- Pet & Mount
+        PET_BATTLE_OPENING_START = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PET_BATTLE_CLOSE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+
+        -- UI & System
+        UPDATE_INVENTORY_DURABILITY = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        BAG_UPDATE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        CALENDAR_UPDATE_PENDING_INVITES = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        TRANSMOG_COLLECTION_UPDATED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
     },
 }
 
@@ -213,6 +260,20 @@ function iSP:InitializeSettings()
     if not iSPSettings.SoundFiles then
         iSPSettings.SoundFiles = {}
     end
+
+    -- Auto-fill defaults for any triggers in TriggerMeta not yet in saved settings
+    -- Handles upgrades from older versions that didn't have new triggers
+    if iSP.TriggerMeta then
+        local defaultTrigger = {
+            enabled = false, sound = "", duration = 0, startOffset = 0,
+            loop = false, loopCount = 1, fadeIn = false, fadeOut = false
+        }
+        for triggerID, _ in pairs(iSP.TriggerMeta) do
+            if not iSPSettings.Triggers[triggerID] then
+                iSPSettings.Triggers[triggerID] = CopyTable(defaultTrigger)
+            end
+        end
+    end
 end
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
@@ -242,6 +303,8 @@ end
 
 -- Active sound timers for managing playback
 iSP.ActiveSounds = {}
+iSP.TriggerLastFired = {}  -- Cooldown tracking: triggerID -> GetTime()
+iSP.EventToTriggers = {}   -- Lookup: WoW event -> {triggerID, ...}
 
 -- Stop currently playing sound
 function iSP:StopSound(soundID)
@@ -527,18 +590,39 @@ end
 -- Event frame
 local eventFrame = CreateFrame("Frame")
 
--- Event handler
+-- Play trigger sound with cooldown check
+function iSP:PlayTriggerSoundWithCooldown(triggerID)
+    local meta = self.TriggerMeta and self.TriggerMeta[triggerID]
+    if meta then
+        local cd = meta.cooldown or 0
+        if cd > 0 then
+            local lastFired = self.TriggerLastFired[triggerID] or 0
+            if (GetTime() - lastFired) < cd then return end
+        end
+        self.TriggerLastFired[triggerID] = GetTime()
+    end
+    self:PlayTriggerSound(triggerID)
+end
+
+-- Event handler — data-driven dispatch
 local function OnEvent(self, event, ...)
+    -- ── Core lifecycle events (always handled) ──
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
         if loadedAddon == addonName then
             iSP:OnAddonLoaded()
         end
-    elseif event == "PLAYER_LOGIN" then
+        return
+    end
+
+    if event == "PLAYER_LOGIN" then
         iSP:OnPlayerLogin()
-    elseif event == "PLAYER_REGEN_DISABLED" then
+        return
+    end
+
+    -- ── Combat state tracking (always active) ──
+    if event == "PLAYER_REGEN_DISABLED" then
         iSP.State.InCombat = true
-        -- Auto-hide settings and setup guide on combat enter
         if iSP.SettingsFrame and iSP.SettingsFrame:IsShown() then
             iSP.SettingsFrame:Hide()
         end
@@ -546,56 +630,40 @@ local function OnEvent(self, event, ...)
         if setupGuide and setupGuide:IsShown() then
             setupGuide:Hide()
         end
-        iSP:PlayTriggerSound("PLAYER_REGEN_DISABLED")
-    elseif event == "PLAYER_REGEN_ENABLED" then
+        iSP:PlayTriggerSoundWithCooldown("PLAYER_REGEN_DISABLED")
+        return
+    end
+
+    if event == "PLAYER_REGEN_ENABLED" then
         iSP.State.InCombat = false
-        iSP:PlayTriggerSound("PLAYER_REGEN_ENABLED")
-    elseif event == "PLAYER_LEVEL_UP" then
-        iSP:PlayTriggerSound("PLAYER_LEVEL_UP")
-    elseif event == "PLAYER_DEAD" then
-        -- Reset kill streak on death
+        iSP:PlayTriggerSoundWithCooldown("PLAYER_REGEN_ENABLED")
+        return
+    end
+
+    -- ── Kill streak reset on death ──
+    if event == "PLAYER_DEAD" then
         iSP:ResetKillStreak()
-        iSP:PlayTriggerSound("PLAYER_DEAD")
-    elseif event == "PLAYER_ALIVE" then
-        iSP:PlayTriggerSound("PLAYER_ALIVE")
-    elseif event == "PLAYER_UNGHOST" then
-        iSP:PlayTriggerSound("PLAYER_UNGHOST")
-    elseif event == "PLAYER_TARGET_CHANGED" then
-        iSP:PlayTriggerSound("PLAYER_TARGET_CHANGED")
-    elseif event == "ACHIEVEMENT_EARNED" then
-        iSP:PlayTriggerSound("ACHIEVEMENT_EARNED")
-    elseif event == "QUEST_COMPLETE" then
-        iSP:PlayTriggerSound("QUEST_COMPLETE")
-    elseif event == "QUEST_ACCEPTED" then
-        iSP:PlayTriggerSound("QUEST_ACCEPTED")
-    elseif event == "QUEST_TURNED_IN" then
-        iSP:PlayTriggerSound("QUEST_TURNED_IN")
-    elseif event == "LOOT_READY" then
-        iSP:PlayTriggerSound("LOOT_READY")
-    elseif event == "LOOT_OPENED" then
-        iSP:PlayTriggerSound("LOOT_OPENED")
-    elseif event == "LOOT_CLOSED" then
-        iSP:PlayTriggerSound("LOOT_CLOSED")
-    elseif event == "GROUP_JOINED" then
-        iSP:PlayTriggerSound("GROUP_JOINED")
-    elseif event == "GROUP_LEFT" then
-        iSP:PlayTriggerSound("GROUP_LEFT")
-    elseif event == "GROUP_ROSTER_UPDATE" then
-        iSP:PlayTriggerSound("GROUP_ROSTER_UPDATE")
-    elseif event == "READY_CHECK" then
-        iSP:PlayTriggerSound("READY_CHECK")
-    elseif event == "READY_CHECK_CONFIRM" then
-        iSP:PlayTriggerSound("READY_CHECK_CONFIRM")
-    elseif event == "PLAYER_ENTERING_WORLD" then
-        iSP:PlayTriggerSound("PLAYER_ENTERING_WORLD")
-    elseif event == "ZONE_CHANGED_NEW_AREA" then
-        iSP:PlayTriggerSound("ZONE_CHANGED_NEW_AREA")
-    elseif event == "ENCOUNTER_START" then
-        iSP:PlayTriggerSound("ENCOUNTER_START")
-    elseif event == "ENCOUNTER_END" then
-        iSP:PlayTriggerSound("ENCOUNTER_END")
-    elseif event == "BOSS_KILL" then
-        iSP:PlayTriggerSound("BOSS_KILL")
+        iSP:PlayTriggerSoundWithCooldown("PLAYER_DEAD")
+        return
+    end
+
+    -- ── Data-driven dispatch for all other events ──
+    local triggers = iSP.EventToTriggers[event]
+    if triggers then
+        for _, triggerID in ipairs(triggers) do
+            local meta = iSP.TriggerMeta[triggerID]
+            if meta then
+                -- Unit filter check (e.g. UNIT_SPELLCAST_START only for "player")
+                if meta.unitFilter then
+                    local unit = ...
+                    if unit == meta.unitFilter then
+                        iSP:PlayTriggerSoundWithCooldown(triggerID)
+                    end
+                else
+                    iSP:PlayTriggerSoundWithCooldown(triggerID)
+                end
+            end
+        end
     end
 end
 
@@ -690,84 +758,36 @@ eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 
--- Register trigger events
+-- Register trigger events — data-driven from TriggerMeta
 function iSP:RegisterTriggerEvents()
-    -- Player Events
-    if iSPSettings.Triggers.PLAYER_LEVEL_UP and iSPSettings.Triggers.PLAYER_LEVEL_UP.enabled then
-        eventFrame:RegisterEvent("PLAYER_LEVEL_UP")
-    end
-    if iSPSettings.Triggers.PLAYER_DEAD and iSPSettings.Triggers.PLAYER_DEAD.enabled then
-        eventFrame:RegisterEvent("PLAYER_DEAD")
-    end
-    if iSPSettings.Triggers.PLAYER_ALIVE and iSPSettings.Triggers.PLAYER_ALIVE.enabled then
-        eventFrame:RegisterEvent("PLAYER_ALIVE")
-    end
-    if iSPSettings.Triggers.PLAYER_UNGHOST and iSPSettings.Triggers.PLAYER_UNGHOST.enabled then
-        eventFrame:RegisterEvent("PLAYER_UNGHOST")
-    end
+    -- Always register combat state events (used for InCombat tracking + UI hide)
+    eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 
-    -- Combat Events
-    if iSPSettings.Triggers.PLAYER_TARGET_CHANGED and iSPSettings.Triggers.PLAYER_TARGET_CHANGED.enabled then
-        eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    end
+    -- Build EventToTriggers lookup and register enabled events
+    self.EventToTriggers = {}
 
-    -- Achievements & Quests
-    if iSPSettings.Triggers.ACHIEVEMENT_EARNED and iSPSettings.Triggers.ACHIEVEMENT_EARNED.enabled then
-        eventFrame:RegisterEvent("ACHIEVEMENT_EARNED")
-    end
-    if iSPSettings.Triggers.QUEST_COMPLETE and iSPSettings.Triggers.QUEST_COMPLETE.enabled then
-        eventFrame:RegisterEvent("QUEST_COMPLETE")
-    end
-    if iSPSettings.Triggers.QUEST_ACCEPTED and iSPSettings.Triggers.QUEST_ACCEPTED.enabled then
-        eventFrame:RegisterEvent("QUEST_ACCEPTED")
-    end
-    if iSPSettings.Triggers.QUEST_TURNED_IN and iSPSettings.Triggers.QUEST_TURNED_IN.enabled then
-        eventFrame:RegisterEvent("QUEST_TURNED_IN")
-    end
+    if not iSP.TriggerMeta then return end
 
-    -- Loot & Items
-    if iSPSettings.Triggers.LOOT_READY and iSPSettings.Triggers.LOOT_READY.enabled then
-        eventFrame:RegisterEvent("LOOT_READY")
-    end
-    if iSPSettings.Triggers.LOOT_OPENED and iSPSettings.Triggers.LOOT_OPENED.enabled then
-        eventFrame:RegisterEvent("LOOT_OPENED")
-    end
-    if iSPSettings.Triggers.LOOT_CLOSED and iSPSettings.Triggers.LOOT_CLOSED.enabled then
-        eventFrame:RegisterEvent("LOOT_CLOSED")
-    end
+    for triggerID, meta in pairs(iSP.TriggerMeta) do
+        -- Skip triggers without a WoW event (PvP custom triggers)
+        if meta.event
+           and meta.event ~= "PLAYER_REGEN_DISABLED"  -- Already registered above
+           and meta.event ~= "PLAYER_REGEN_ENABLED"    -- Already registered above
+        then
+            -- Skip triggers not available for this game version
+            if self:IsTriggerAvailable(triggerID) then
+                if iSPSettings.Triggers[triggerID]
+                   and iSPSettings.Triggers[triggerID].enabled then
+                    eventFrame:RegisterEvent(meta.event)
 
-    -- Group & Social
-    if iSPSettings.Triggers.GROUP_JOINED and iSPSettings.Triggers.GROUP_JOINED.enabled then
-        eventFrame:RegisterEvent("GROUP_JOINED")
-    end
-    if iSPSettings.Triggers.GROUP_LEFT and iSPSettings.Triggers.GROUP_LEFT.enabled then
-        eventFrame:RegisterEvent("GROUP_LEFT")
-    end
-    if iSPSettings.Triggers.GROUP_ROSTER_UPDATE and iSPSettings.Triggers.GROUP_ROSTER_UPDATE.enabled then
-        eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-    end
-    if iSPSettings.Triggers.READY_CHECK and iSPSettings.Triggers.READY_CHECK.enabled then
-        eventFrame:RegisterEvent("READY_CHECK")
-    end
-    if iSPSettings.Triggers.READY_CHECK_CONFIRM and iSPSettings.Triggers.READY_CHECK_CONFIRM.enabled then
-        eventFrame:RegisterEvent("READY_CHECK_CONFIRM")
-    end
-
-    -- Dungeon & Raid
-    if iSPSettings.Triggers.PLAYER_ENTERING_WORLD and iSPSettings.Triggers.PLAYER_ENTERING_WORLD.enabled then
-        eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    end
-    if iSPSettings.Triggers.ZONE_CHANGED_NEW_AREA and iSPSettings.Triggers.ZONE_CHANGED_NEW_AREA.enabled then
-        eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-    end
-    if iSPSettings.Triggers.ENCOUNTER_START and iSPSettings.Triggers.ENCOUNTER_START.enabled then
-        eventFrame:RegisterEvent("ENCOUNTER_START")
-    end
-    if iSPSettings.Triggers.ENCOUNTER_END and iSPSettings.Triggers.ENCOUNTER_END.enabled then
-        eventFrame:RegisterEvent("ENCOUNTER_END")
-    end
-    if iSPSettings.Triggers.BOSS_KILL and iSPSettings.Triggers.BOSS_KILL.enabled then
-        eventFrame:RegisterEvent("BOSS_KILL")
+                    if not self.EventToTriggers[meta.event] then
+                        self.EventToTriggers[meta.event] = {}
+                    end
+                    table.insert(self.EventToTriggers[meta.event], triggerID)
+                end
+            end
+        end
     end
 end
 
@@ -835,7 +855,11 @@ function iSP:CreateMinimapButton()
         text = "iSoundPlayer",
         icon = iSP.AddonPath .. "Images\\Icons\\Logo_iSP.blp",
         OnClick = function(self, button)
-            if button == "LeftButton" then
+            if button == "LeftButton" and IsShiftKeyDown() then
+                -- Shift+Left-click stops all playing sounds
+                iSP:StopAllSounds()
+                print(L["AllSoundsStopped"])
+            elseif button == "LeftButton" then
                 -- Show setup guide if available, otherwise show settings
                 if iSP.ShowSetupGuide then
                     iSP:ShowSetupGuide()
@@ -853,6 +877,7 @@ function iSP:CreateMinimapButton()
             tooltip:AddLine(" ", 1, 1, 1)
             tooltip:AddLine(L["MinimapTooltipLeftClick"], 1, 1, 1)
             tooltip:AddLine(L["MinimapTooltipRightClick"], 1, 1, 1)
+            tooltip:AddLine(L["MinimapTooltipShiftClick"], 1, 1, 1)
             tooltip:AddLine(" ", 1, 1, 1)
             tooltip:AddLine(L["MinimapTooltipStatus"] .. (iSPSettings.Enabled and L["StatusEnabled"] or L["StatusDisabled"]), 1, 1, 1)
 

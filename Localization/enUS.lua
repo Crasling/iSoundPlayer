@@ -133,7 +133,9 @@ L["RemoveSound"] = "Remove"
 -- │                           Options Panel - Triggers Tab                         │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
 L["Triggers"] = Colors.iSP .. "Triggers"
-L["TriggersInfo"] = Colors.Gray .. "Configure when sounds should play. Connect in-game events to your sound files." .. Colors.Reset
+L["TriggersInfo"] = Colors.Gray .. "Configure when sounds should play. Connect in-game events to your sound files. Click category headers to collapse/expand." .. Colors.Reset
+L["SearchTriggers"] = Colors.Gray .. "Search triggers..." .. Colors.Reset
+L["SearchSounds"] = Colors.Gray .. "Search sounds..." .. Colors.Reset
 L["AvailableTriggers"] = Colors.iSP .. "Available Triggers"
 L["EnableTrigger"] = "Enable"
 L["SelectSound"] = "Select Sound..."
@@ -205,6 +207,7 @@ L["FadeOut"] = "Fade Out"
 L["DescFadeOut"] = Colors.Gray .. "Gradually decrease volume (not supported by WoW API)" .. Colors.Reset
 L["StopSound"] = "Stop Sound"
 L["StopAllSounds"] = "Stop All Sounds"
+L["AllSoundsStopped"] = Msg(Colors.Yellow .. "All sounds stopped.")
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                 Popup Dialogs                                  │
@@ -264,6 +267,7 @@ L["IWRPromoLink"] = "Available on the CurseForge App and at curseforge.com/wow/a
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
 L["MinimapTooltipLeftClick"] = Colors.Yellow .. "Left Click: " .. Colors.Orange .. "Setup Guide"
 L["MinimapTooltipRightClick"] = Colors.Yellow .. "Right Click: " .. Colors.Orange .. "Open Settings"
+L["MinimapTooltipShiftClick"] = Colors.Yellow .. "Shift+Click: " .. Colors.Orange .. "Stop All Sounds"
 L["MinimapTooltipStatus"] = Colors.Yellow .. "Status: " .. Colors.Reset
 L["StatusEnabled"] = Colors.Green .. "Enabled" .. Colors.Reset
 L["StatusDisabled"] = Colors.Red .. "Disabled" .. Colors.Reset
@@ -284,7 +288,7 @@ L["SetupGuideStep2Text"] = Colors.White .. "1. Open Settings by typing |r" .. Co
 L["SetupGuideStep3Header"] = Colors.iSP .. "Step 3: Configure Triggers|r"
 L["SetupGuideStep3Text"] = Colors.White .. "1. Go to the |r" .. Colors.iSP .. "Triggers|r " .. Colors.White .. "tab|r\n\n" .. Colors.White .. "2. Browse through categories like:|r\n" .. Colors.Gray .. "   • Player Events (login, level up, death)|r\n" .. Colors.Gray .. "   • Combat Events (enter/exit combat)|r\n" .. Colors.Gray .. "   • PvP Events (kills, sprees)|r\n" .. Colors.Gray .. "   • And many more!|r\n\n" .. Colors.White .. "3. Enable a trigger and assign a registered sound to it|r\n\n" .. Colors.White .. "4. Customize playback options (loop, fade, etc.)|r"
 L["SetupGuideQuickTipsHeader"] = Colors.iSP .. "Quick Tips|r"
-L["SetupGuideQuickTipsText"] = Colors.iSP .. "•|r " .. Colors.White .. "Use |r" .. Colors.Yellow .. "/isp|r " .. Colors.White .. "to open settings|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Left-click minimap icon to open this guide|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Right-click minimap icon to open settings|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Always |r" .. Colors.Yellow .. "/reload|r " .. Colors.White .. "after adding new sound files|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Check the |r" .. Colors.iSP .. "General|r " .. Colors.White .. "tab to enable/disable the addon|r"
+L["SetupGuideQuickTipsText"] = Colors.iSP .. "•|r " .. Colors.White .. "Use |r" .. Colors.Yellow .. "/isp|r " .. Colors.White .. "to open settings|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Left-click minimap icon to open this guide|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Right-click minimap icon to open settings|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Shift+click minimap icon to stop all sounds|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Always |r" .. Colors.Yellow .. "/reload|r " .. Colors.White .. "after adding new sound files|r\n\n" .. Colors.iSP .. "•|r " .. Colors.White .. "Check the |r" .. Colors.iSP .. "General|r " .. Colors.White .. "tab to enable/disable the addon|r"
 L["SetupGuideDontShow"] = Colors.Gray .. "Don't show on startup|r"
 L["SetupGuideOpenSettings"] = Colors.iSP .. "Open Settings|r"
 L["SetupGuideClose"] = Colors.Red .. "Close|r"

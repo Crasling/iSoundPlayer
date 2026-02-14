@@ -17,6 +17,40 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.3.0 - Trigger Expansion & Collapsible UI
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- 44 new triggers across 4 new categories (75 total triggers, 13 categories)
+- New categories: Profession & Crafting, Economy & Mail, Pet & Mount, UI & System
+- Version-gating: triggers are automatically hidden if not available for current WoW version
+- Collapsible category headers with click to expand/collapse
+- Category-level enable/disable checkbox (toggle all triggers in a category)
+- Search box to filter triggers by name, description, or event ID
+- Per-trigger cooldown system to prevent sound spam on high-frequency events
+- Data-driven event system — no more hardcoded event handlers
+
+[CATEGORIES]
+- Player Events: +7 triggers (XP, gold, control lost/gained, gear change, movement)
+- Combat Events: +4 triggers (spell cast start/complete/interrupted, form change)
+- Achievements & Quests: +2 triggers (criteria complete, quest log update)
+- Loot & Items: +4 triggers (loot message, money looted, loot roll, boss loot)
+- Group & Social: +9 triggers (party invite, whisper, guild/party/raid chat, friends, guild MOTD)
+- Dungeon & Raid: +2 triggers (lockout warning, M+ completed)
+- Profession & Crafting: 4 triggers (trade window, trade accepted, skill up)
+- Economy & Mail: 7 triggers (mailbox, mail sent, pending mail, auction house)
+- Pet & Mount: 2 triggers (pet battle start/end — MoP+)
+- UI & System: 4 triggers (durability, bags, calendar invite, transmog — mixed versions)
+
+[TECHNICAL]
+- Version-gating schema: "all", {min=N}, {max=N}, {min=N, max=M}
+- IsTriggerAvailable(), GetAvailableTriggersInCategory(), IsCategoryAvailable() helpers
+- EventToTriggers lookup table for O(1) event dispatch
+- PlayTriggerSoundWithCooldown() replaces direct PlayTriggerSound() in event handler
+- Dynamic default fill in InitializeSettings() for seamless upgrades
+- unitFilter field for UNIT_SPELLCAST events (only fires for "player" unit)
+
+═══════════════════════════════════════════════════════════
 Version 0.2.3 - Retail PvP Kill Tracking & Game Version Fix
 ═══════════════════════════════════════════════════════════
 
