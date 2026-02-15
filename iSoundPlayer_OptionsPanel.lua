@@ -1180,13 +1180,13 @@ function iSP:CreateOptionsPanel()
 
     _, y = CreateSectionHeader(aboutContent, L["About"], y)
 
-    y = y - 4
+    y = y - 20
 
     local aboutIcon = aboutContent:CreateTexture(nil, "ARTWORK")
-    aboutIcon:SetSize(48, 48)
+    aboutIcon:SetSize(64, 64)
     aboutIcon:SetPoint("TOP", aboutContent, "TOP", 0, y)
     aboutIcon:SetTexture(iconPath)
-    y = y - 56
+    y = y - 70
 
     local aboutTitle = aboutContent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     aboutTitle:SetPoint("TOP", aboutContent, "TOP", 0, y)
@@ -1212,6 +1212,30 @@ function iSP:CreateOptionsPanel()
     if aih < 14 then aih = 14 end
     y = y - aih - 8
 
+    -- Discord Section
+    _, y = CreateSectionHeader(aboutContent, L["Discord"], y)
+    y = y - 2
+
+    local discordDesc = aboutContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    discordDesc:SetPoint("TOPLEFT", aboutContent, "TOPLEFT", 25, y)
+    discordDesc:SetText(L["DiscordDesc"])
+    y = y - 16
+
+    local discordBox = CreateFrame("EditBox", nil, aboutContent, "InputBoxTemplate")
+    discordBox:SetSize(280, 22)
+    discordBox:SetPoint("TOPLEFT", aboutContent, "TOPLEFT", 25, y)
+    discordBox:SetAutoFocus(false)
+    discordBox:SetText(L["DiscordLink"])
+    discordBox:SetFontObject(GameFontHighlight)
+    discordBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+    discordBox:SetScript("OnEditFocusLost", function(self)
+        self:HighlightText(0, 0)
+        self:SetText(L["DiscordLink"])
+    end)
+    discordBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    y = y - 30
+
+    -- Developer Section
     y = y - 4
     _, y = CreateSectionHeader(aboutContent, L["Developer"], y)
 

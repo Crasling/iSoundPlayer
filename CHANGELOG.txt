@@ -17,6 +17,14 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.3.1 - About Page Update
+═══════════════════════════════════════════════════════════
+
+[UPDATED]
+- About page: icon size 48→64, spacing aligned with iWR/iNIF
+- Added Discord section with copyable invite link
+
+═══════════════════════════════════════════════════════════
 Version 0.3.0 - Trigger Expansion & Collapsible UI
 ═══════════════════════════════════════════════════════════
 
