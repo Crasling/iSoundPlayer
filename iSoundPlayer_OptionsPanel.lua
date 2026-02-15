@@ -1207,7 +1207,7 @@ function iSP:CreateOptionsPanel()
     aboutInfo:SetPoint("TOPLEFT", aboutContent, "TOPLEFT", 25, y)
     aboutInfo:SetWidth(500)
     aboutInfo:SetJustifyH("LEFT")
-    aboutInfo:SetText(L["AboutInfo"])
+    aboutInfo:SetText(L["AboutInfo"] .. "\n\n" .. L["AboutInfoEarlyDev"])
     local aih = aboutInfo:GetStringHeight()
     if aih < 14 then aih = 14 end
     y = y - aih - 8

@@ -1,7 +1,7 @@
 ## Interface: 11506, 11508, 20505, 30405, 40401, 40402, 50503, 120001
 ## Title: |cffff9716iSoundPlayer |cFF00FF00v0.3.1|r
 ## Version: 0.3.1
-## Notes: |cffff9716Custom Sound Player Addon|n|cFFFFFFFFPlay MP3 files at triggers.|r
+## Notes: |cffff9716Custom Sound Player Addon|n|cFFFF0000Your game, your sounds.|r
 ## Author: Crasling
 ## IconTexture: Interface\AddOns\iSoundPlayer\Images\Icons\Logo_iSP.blp
 ## Category: Audio
