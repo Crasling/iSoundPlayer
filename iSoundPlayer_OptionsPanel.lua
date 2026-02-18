@@ -1235,6 +1235,15 @@ function iSP:CreateOptionsPanel()
     discordBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     y = y - 30
 
+    -- Translations Section
+    _, y = CreateSectionHeader(aboutContent, L["Translations"], y)
+    y = y - 2
+
+    local translatorText = aboutContent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    translatorText:SetPoint("TOPLEFT", aboutContent, "TOPLEFT", 25, y)
+    translatorText:SetText("|T" .. iSP.AddonPath .. "Images\\Locale\\ruRU.blp:16|t |cFFFFFF00ZamestoTV|r - " .. L["Russian"])
+    y = y - 22
+
     -- Developer Section
     y = y - 4
     _, y = CreateSectionHeader(aboutContent, L["Developer"], y)

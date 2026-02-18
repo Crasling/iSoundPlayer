@@ -1,5 +1,8 @@
 local addonName, addon = ...
 
+-- Only load Russian localization on Russian clients
+if GetLocale() ~= "ruRU" then return end
+
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                     Colors                                     │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
