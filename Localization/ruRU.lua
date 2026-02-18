@@ -98,7 +98,7 @@ L["TriggerDisabled"]  = Msg("Триггер " .. Colors.Yellow .. "%s" .. Colors
 L["Tab1General"] = "Общие"
 L["Tab2Sounds"]  = "Звуки"
 L["Tab3Triggers"] = "Триггеры"
-L["Tab4About"]   = "О проекте"
+L["Tab4About"]   = "О аддоне"
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - General Tab                         │
@@ -182,7 +182,7 @@ L["DescTriggerPvPGodlike"]       = "При 20+ убийствах без сме�
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - About Tab                           │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
-L["About"]           = Colors.iSP .. "О проекте"
+L["About"]           = Colors.iSP .. "О аддоне"
 L["CreatedBy"]       = "Автор: "
 L["AboutInfo"]       = Colors.iSP .. "iSoundPlayer " .. Colors.Reset .. "— это аддон, позволяющий воспроизводить собственные MP3-файлы при определённых событиях в World of Warcraft."
 L["AboutInfoEarlyDev"] = Colors.iSP .. "iSP " .. Colors.Reset .. "находится на ранней стадии разработки. Присоединяйтесь к Discord за помощью, вопросами и предложениями."
