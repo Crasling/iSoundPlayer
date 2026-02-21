@@ -1,11 +1,11 @@
--- ═════════════════════════════════════════════════════════════════════════════════
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
 -- ██╗ ███████╗ ██████╗  ██╗   ██╗ ███╗   ██╗ ██████╗  ██████╗  ██╗      █████╗  ██╗   ██╗ ███████╗ ██████╗
 -- ██║ ██╔════╝██╔═══██╗ ██║   ██║ ████╗  ██║ ██╔══██╗ ██╔══██╗ ██║     ██╔══██╗ ╚██╗ ██╔╝ ██╔════╝ ██╔══██╗
 -- ██║ ███████╗██║   ██║ ██║   ██║ ██╔██╗ ██║ ██║  ██║ ██████╔╝ ██║     ███████║  ╚████╔╝  █████╗   ██████╔╝
 -- ██║ ╚════██║██║   ██║ ██║   ██║ ██║╚██╗██║ ██║  ██║ ██╔═══╝  ██║     ██╔══██║   ╚██╔╝   ██╔══╝   ██╔══██╗
 -- ██║ ███████║╚██████╔╝ ╚██████╔╝ ██║ ╚████║ ██████╔╝ ██║      ███████╗██║  ██║    ██║    ███████╗ ██║  ██║
 -- ╚═╝ ╚══════╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═════╝  ╚═╝      ╚══════╝╚═╝  ╚═╝    ╚═╝    ╚══════╝ ╚═╝  ╚═╝
--- ═════════════════════════════════════════════════════════════════════════════════
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                     Namespace                                  │
@@ -58,6 +58,14 @@ iSP.CONSTANTS = {
     DEFAULT_VOLUME = 1.0,
 }
 
+iSP.ChannelCVars = {
+    Master = "Sound_MasterVolume",
+    SFX = "Sound_SFXVolume",
+    Music = "Sound_MusicVolume",
+    Ambience = "Sound_AmbienceVolume",
+    Dialog = "Sound_DialogVolume",
+}
+
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                Runtime State                                   │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
@@ -84,6 +92,8 @@ iSP.SettingsDefault = {
     Enabled = true,
     ShowNotifications = false,
     DebugMode = false,
+    SoundChannel = "Master",
+    iSPVolume = 100,
 
     -- Minimap
     MinimapButton = {
@@ -192,6 +202,9 @@ iSP.SettingsDefault = {
         -- Pet & Mount
         PET_BATTLE_OPENING_START = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         PET_BATTLE_CLOSE = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PET_SUMMONED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PET_DISMISSED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
+        PET_DIED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
 
         -- UI & System
         UPDATE_INVENTORY_DURABILITY = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
@@ -386,9 +399,24 @@ function iSP:PlaySound(fileName, options)
     --
     -- We can simulate some of these with timers and workarounds:
 
+    -- Volume helper: temporarily adjusts channel volume for iSP sounds
+    local function PlayWithVolume(path, ch)
+        local vol = iSPSettings.iSPVolume or 100
+        if vol >= 100 then
+            return pcall(PlaySoundFile, path, ch)
+        end
+        local cvar = iSP.ChannelCVars[ch] or "Sound_MasterVolume"
+        local origVol = tonumber(GetCVar(cvar)) or 1.0
+        SetCVar(cvar, origVol * (vol / 100))
+        local ok, err = pcall(PlaySoundFile, path, ch)
+        C_Timer.After(0, function() SetCVar(cvar, origVol) end)
+        return ok, err
+    end
+
     local function PlayWithOptions()
         -- Try to play the sound
-        local success, errorMsg = pcall(PlaySoundFile, soundPath, "Master")
+        local channel = iSPSettings.SoundChannel or "Master"
+        local success, errorMsg = PlayWithVolume(soundPath, channel)
 
         if not success and iSPSettings.DebugMode then
             print(string.format(L["SoundFailed"], soundPath))
@@ -430,7 +458,7 @@ function iSP:PlaySound(fileName, options)
                 local soundLength = duration > 0 and duration or 3 -- Default 3 seconds if no duration set
 
                 currentLoop = currentLoop + 1
-                PlaySoundFile(soundPath, "Master")
+                PlayWithVolume(soundPath, iSPSettings.SoundChannel or "Master")
 
                 if currentLoop < loopCount then
                     loopTimer = C_Timer.NewTimer(soundLength, LoopSound)
@@ -748,6 +776,76 @@ else
             if WasKilledByPlayer(attackerGUID) and IsTargetPlayer(targetGUID) then
                 iSP:OnHonorableKill()
             end
+        end
+    end)
+end
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                               Pet State Tracking                               │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+
+do
+    local petFrame = CreateFrame("Frame")
+    local previousPetState = nil -- nil = unknown, "alive", "dead", "none"
+
+    local function GetPetState()
+        if UnitExists("pet") then
+            if UnitIsDead("pet") then
+                return "dead"
+            else
+                return "alive"
+            end
+        else
+            return "none"
+        end
+    end
+
+    local function OnPetEvent()
+        if not iSPSettings or not iSPSettings.Triggers then return end
+
+        local summoned = iSPSettings.Triggers["PET_SUMMONED"]
+        local dismissed = iSPSettings.Triggers["PET_DISMISSED"]
+        local died = iSPSettings.Triggers["PET_DIED"]
+
+        local anyEnabled = (summoned and summoned.enabled)
+                        or (dismissed and dismissed.enabled)
+                        or (died and died.enabled)
+        if not anyEnabled then return end
+
+        local newState = GetPetState()
+
+        if newState == "alive" and previousPetState ~= "alive" then
+            iSP:PlayTriggerSoundWithCooldown("PET_SUMMONED")
+        elseif newState == "dead" and previousPetState == "alive" then
+            iSP:PlayTriggerSoundWithCooldown("PET_DIED")
+        elseif newState == "none" and previousPetState == "alive" then
+            iSP:PlayTriggerSoundWithCooldown("PET_DISMISSED")
+        end
+
+        previousPetState = newState
+    end
+
+    petFrame:RegisterEvent("UNIT_PET")
+    petFrame:RegisterEvent("UNIT_FLAGS")
+    petFrame:RegisterEvent("PLAYER_LOGIN")
+
+    petFrame:SetScript("OnEvent", function(self, event, ...)
+        if event == "PLAYER_LOGIN" then
+            previousPetState = GetPetState()
+            return
+        end
+
+        if event == "UNIT_PET" then
+            OnPetEvent()
+            return
+        end
+
+        if event == "UNIT_FLAGS" then
+            local unit = ...
+            if unit == "pet" then
+                OnPetEvent()
+            end
+            return
         end
     end)
 end

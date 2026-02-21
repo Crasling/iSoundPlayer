@@ -17,6 +17,21 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.3.5 - Custom Volume Sliders
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- Custom iWR-style volume sliders replacing OptionsSliderTemplate
+- BackdropTemplate track (200x12) with fill bar, tick marks, and thumb
+- 11 tick marks at every 10% (0%, 10%, ..., 100%)
+- Orange fill bar showing current volume level
+- Click-on-track, thumb drag, and mousewheel interaction
+- Min/Max labels ("0%"/"100%") below each track
+
+[UPDATED]
+- Channel Volume and Soundfile Volume sliders both use new custom style
+
+═══════════════════════════════════════════════════════════
 Version 0.3.1 - About Page Update
 ═══════════════════════════════════════════════════════════
 

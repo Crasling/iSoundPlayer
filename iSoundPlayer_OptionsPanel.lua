@@ -1,11 +1,11 @@
--- ═════════════════════════
--- ██╗ ███████╗ ██████╗
--- ██║ ██╔════╝ ██╔══██╗
--- ██║ ███████╗ ██████╔╝
--- ██║ ╚════██║ ██╔═══╝
--- ██║ ███████║ ██║
--- ╚═╝ ╚══════╝ ╚═╝
--- ═════════════════════════
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
+-- ██╗ ███████╗ ██████╗  ██╗   ██╗ ███╗   ██╗ ██████╗  ██████╗  ██╗      █████╗  ██╗   ██╗ ███████╗ ██████╗
+-- ██║ ██╔════╝██╔═══██╗ ██║   ██║ ████╗  ██║ ██╔══██╗ ██╔══██╗ ██║     ██╔══██╗ ╚██╗ ██╔╝ ██╔════╝ ██╔══██╗
+-- ██║ ███████╗██║   ██║ ██║   ██║ ██╔██╗ ██║ ██║  ██║ ██████╔╝ ██║     ███████║  ╚████╔╝  █████╗   ██████╔╝
+-- ██║ ╚════██║██║   ██║ ██║   ██║ ██║╚██╗██║ ██║  ██║ ██╔═══╝  ██║     ██╔══██║   ╚██╔╝   ██╔══╝   ██╔══██╗
+-- ██║ ███████║╚██████╔╝ ╚██████╔╝ ██║ ╚████║ ██████╔╝ ██║      ███████╗██║  ██║    ██║    ███████╗ ██║  ██║
+-- ╚═╝ ╚══════╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═════╝  ╚═╝      ╚══════╝╚═╝  ╚═╝    ╚═╝    ╚══════╝ ╚═╝  ╚═╝
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 -- ╭───────────────────────────────────────────────────────────────────────────────╮
 -- │                      Options Panel (Custom Standalone Frame)                  │
@@ -396,6 +396,280 @@ function iSP:CreateOptionsPanel()
     checkboxRefs.ShowNotifications = cbNotifications
 
     y = y - 8
+    _, y = CreateSectionHeader(generalContent, L["SoundSettings"], y)
+
+    -- Sound Channel label
+    local channelLabel = generalContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    channelLabel:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 25, y)
+    channelLabel:SetText(L["SoundChannelLabel"])
+    y = y - 20
+
+    -- Sound Channel description
+    local channelDesc = generalContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    channelDesc:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 25, y)
+    channelDesc:SetWidth(480)
+    channelDesc:SetJustifyH("LEFT")
+    channelDesc:SetText(L["DescSoundChannel"])
+    local descH = channelDesc:GetStringHeight()
+    if descH < 12 then descH = 12 end
+    y = y - descH - 6
+
+    -- Sound Channel dropdown
+    local channelOptions = {"Master", "SFX", "Music", "Ambience", "Dialog"}
+    local channelDisplayNames = {
+        Master = L["ChannelMaster"],
+        SFX = L["ChannelSFX"],
+        Music = L["ChannelMusic"],
+        Ambience = L["ChannelAmbience"],
+        Dialog = L["ChannelDialog"],
+    }
+    local channelCVars = {
+        Master = "Sound_MasterVolume",
+        SFX = "Sound_SFXVolume",
+        Music = "Sound_MusicVolume",
+        Ambience = "Sound_AmbienceVolume",
+        Dialog = "Sound_DialogVolume",
+    }
+
+    local channelDropdown = CreateFrame("Frame", "iSP_ChannelDropdown", generalContent, "UIDropDownMenuTemplate")
+    channelDropdown:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 5, y)
+    UIDropDownMenu_SetWidth(channelDropdown, 170)
+
+    local currentChannel = iSPSettings.SoundChannel or "Master"
+    UIDropDownMenu_SetText(channelDropdown, channelDisplayNames[currentChannel] or currentChannel)
+
+    y = y - 34
+
+    -- Custom volume slider factory (iWR-style: track + fill + ticks + thumb)
+    local VSLIDER_WIDTH = 200
+    local VSLIDER_HEIGHT = 12
+
+    local function CreateCustomVolumeSlider(parent, anchorPoint, minVal, maxVal, step)
+        -- Track (BackdropTemplate)
+        local track = CreateFrame("Frame", nil, parent, BACKDROP_TEMPLATE)
+        track:SetSize(VSLIDER_WIDTH, VSLIDER_HEIGHT)
+        track:SetPoint(unpack(anchorPoint))
+        track:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+            insets = {left = 1, right = 1, top = 1, bottom = 1},
+        })
+        track:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
+        track:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+
+        -- Fill bar (left-to-right, iSP orange)
+        local fill = track:CreateTexture(nil, "ARTWORK")
+        fill:SetHeight(VSLIDER_HEIGHT - 2)
+        fill:SetPoint("LEFT", track, "LEFT", 1, 0)
+        fill:SetTexture("Interface\\Buttons\\WHITE8x8")
+        fill:SetVertexColor(1, 0.59, 0.09, 0.7)
+
+        -- Tick marks every 10% (11 ticks: 0%, 10%, ..., 100%)
+        local stepPx = VSLIDER_WIDTH / 10
+        for i = 0, 10 do
+            local tick = track:CreateTexture(nil, "OVERLAY")
+            tick:SetSize(1, VSLIDER_HEIGHT)
+            tick:SetPoint("CENTER", track, "LEFT", i * stepPx, 0)
+            tick:SetColorTexture(0.5, 0.5, 0.5, 0.6)
+        end
+
+        -- Thumb
+        local thumb = CreateFrame("Frame", nil, track)
+        thumb:SetSize(14, 18)
+        thumb:SetPoint("CENTER", track, "LEFT", 0, 0)
+        local thumbTex = thumb:CreateTexture(nil, "OVERLAY")
+        thumbTex:SetAllPoints()
+        thumbTex:SetTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+
+        -- Min/Max labels below track
+        local lowLabel = parent:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+        lowLabel:SetPoint("TOPLEFT", track, "BOTTOMLEFT", 0, -2)
+        lowLabel:SetText("|cFF999999" .. minVal .. "%|r")
+
+        local highLabel = parent:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+        highLabel:SetPoint("TOPRIGHT", track, "BOTTOMRIGHT", 0, -2)
+        highLabel:SetText("|cFF999999" .. maxVal .. "%|r")
+
+        -- Value text (to the right of track)
+        local valueText = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        valueText:SetPoint("LEFT", track, "RIGHT", 12, 0)
+
+        -- State
+        local slider = { value = 0, onValueChanged = nil }
+
+        local function UpdateDisplay(val)
+            val = math.floor(val + 0.5)
+            if val < minVal then val = minVal end
+            if val > maxVal then val = maxVal end
+            slider.value = val
+
+            -- Thumb position
+            local fraction = (val - minVal) / (maxVal - minVal)
+            local thumbX = fraction * VSLIDER_WIDTH
+            thumb:ClearAllPoints()
+            thumb:SetPoint("CENTER", track, "LEFT", thumbX, 0)
+
+            -- Fill bar width
+            if val <= minVal then
+                fill:Hide()
+            else
+                fill:Show()
+                fill:SetWidth(math.max(1, thumbX - 1))
+            end
+
+            -- Value text
+            valueText:SetText(val .. "%")
+
+            -- Callback
+            if slider.onValueChanged then
+                slider.onValueChanged(val)
+            end
+        end
+
+        function slider:SetValue(val)
+            UpdateDisplay(val)
+        end
+
+        function slider:GetValue()
+            return self.value
+        end
+
+        -- Click on track
+        track:EnableMouse(true)
+        track:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then
+                local x = select(1, GetCursorPosition()) / self:GetEffectiveScale()
+                local left = self:GetLeft()
+                local fraction = (x - left) / VSLIDER_WIDTH
+                local val = minVal + fraction * (maxVal - minVal)
+                val = math.floor(val / step + 0.5) * step
+                UpdateDisplay(val)
+            end
+        end)
+
+        -- Drag thumb
+        thumb:EnableMouse(true)
+        thumb:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then self.dragging = true end
+        end)
+        thumb:SetScript("OnMouseUp", function(self)
+            self.dragging = false
+        end)
+
+        track:SetScript("OnUpdate", function(self)
+            if thumb.dragging then
+                local x = select(1, GetCursorPosition()) / self:GetEffectiveScale()
+                local left = self:GetLeft()
+                local fraction = (x - left) / VSLIDER_WIDTH
+                local val = minVal + fraction * (maxVal - minVal)
+                val = math.floor(val / step + 0.5) * step
+                if val < minVal then val = minVal end
+                if val > maxVal then val = maxVal end
+                UpdateDisplay(val)
+            end
+        end)
+
+        -- Mousewheel
+        track:EnableMouseWheel(true)
+        track:SetScript("OnMouseWheel", function(self, delta)
+            local newVal = slider.value + (delta * step)
+            if newVal < minVal then newVal = minVal end
+            if newVal > maxVal then newVal = maxVal end
+            UpdateDisplay(newVal)
+        end)
+
+        return slider
+    end
+
+    -- ── Channel Volume ──
+    local channelVolLabel = generalContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    channelVolLabel:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 25, y)
+    channelVolLabel:SetText(L["VolumeLabel"] or "Channel Volume")
+    y = y - 18
+
+    local channelVolDesc = generalContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    channelVolDesc:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 25, y)
+    channelVolDesc:SetWidth(480)
+    channelVolDesc:SetJustifyH("LEFT")
+    channelVolDesc:SetText(L["DescVolume"] or "")
+    local cvDescH = channelVolDesc:GetStringHeight()
+    if cvDescH < 12 then cvDescH = 12 end
+    y = y - cvDescH - 6
+
+    local channelVolSlider = CreateCustomVolumeSlider(
+        generalContent, {"TOPLEFT", generalContent, "TOPLEFT", 25, y}, 0, 100, 1
+    )
+
+    channelVolSlider.onValueChanged = function(val)
+        local ch = iSPSettings.SoundChannel or "Master"
+        local cvar = channelCVars[ch] or "Sound_MasterVolume"
+        SetCVar(cvar, val / 100)
+    end
+
+    -- Helper: update channel volume slider to reflect current channel's volume
+    local function UpdateChannelVolumeSlider()
+        local ch = iSPSettings.SoundChannel or "Master"
+        local cvar = channelCVars[ch] or "Sound_MasterVolume"
+        local vol = tonumber(GetCVar(cvar)) or 1.0
+        local pct = math.floor(vol * 100 + 0.5)
+        channelVolSlider:SetValue(pct)
+    end
+
+    UpdateChannelVolumeSlider()
+
+    y = y - 32
+
+    -- ── Soundfile Volume ──
+    local sfVolLabel = generalContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    sfVolLabel:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 25, y)
+    sfVolLabel:SetText(L["SoundfileVolumeLabel"] or "Soundfile Volume")
+    y = y - 18
+
+    local sfVolDesc = generalContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    sfVolDesc:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 25, y)
+    sfVolDesc:SetWidth(480)
+    sfVolDesc:SetJustifyH("LEFT")
+    sfVolDesc:SetText(L["DescSoundfileVolume"] or "")
+    local sfDescH = sfVolDesc:GetStringHeight()
+    if sfDescH < 12 then sfDescH = 12 end
+    y = y - sfDescH - 6
+
+    local sfVolSlider = CreateCustomVolumeSlider(
+        generalContent, {"TOPLEFT", generalContent, "TOPLEFT", 25, y}, 0, 100, 1
+    )
+
+    sfVolSlider.onValueChanged = function(val)
+        iSPSettings.iSPVolume = val
+    end
+
+    local function UpdateSoundfileVolumeSlider()
+        local pct = iSPSettings.iSPVolume or 100
+        sfVolSlider:SetValue(pct)
+    end
+
+    UpdateSoundfileVolumeSlider()
+
+    -- Initialize dropdown (needs slider references)
+    UIDropDownMenu_Initialize(channelDropdown, function(self, level)
+        for _, ch in ipairs(channelOptions) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = channelDisplayNames[ch]
+            info.value = ch
+            info.checked = (iSPSettings.SoundChannel == ch)
+            info.func = function(btn)
+                iSPSettings.SoundChannel = btn.value
+                UIDropDownMenu_SetText(channelDropdown, channelDisplayNames[btn.value])
+                CloseDropDownMenus()
+                UpdateChannelVolumeSlider()
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+
+    y = y - 32
+
+    y = y - 8
     _, y = CreateSectionHeader(generalContent, L["SettingsHeader"], y)
 
     local resetBtn
@@ -616,8 +890,11 @@ function iSP:CreateOptionsPanel()
 
     y = y - 30
 
-    -- Collapse/expand state and frame storage
+    -- Collapse/expand state and frame storage (all collapsed by default)
     local categoryCollapsed = {}
+    for _, cat in ipairs(iSP.TriggerCategories) do
+        categoryCollapsed[cat.id] = true
+    end
     local triggerFrameCache = {}  -- triggerID -> frame (created once, reused)
     local categoryHeaderCache = {}  -- categoryID -> {frame, arrow, countLabel, checkbox}
     local searchText = ""
@@ -1409,6 +1686,17 @@ function iSP:CreateOptionsPanel()
             if iSPSettings[key] ~= nil then
                 cb:SetChecked(iSPSettings[key])
             end
+        end
+        -- Refresh sound channel dropdown + volume sliders
+        if channelDropdown then
+            local ch = iSPSettings.SoundChannel or "Master"
+            UIDropDownMenu_SetText(channelDropdown, channelDisplayNames[ch] or ch)
+        end
+        if UpdateChannelVolumeSlider then
+            UpdateChannelVolumeSlider()
+        end
+        if UpdateSoundfileVolumeSlider then
+            UpdateSoundfileVolumeSlider()
         end
     end
 end

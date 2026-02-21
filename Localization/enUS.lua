@@ -1,3 +1,12 @@
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
+-- ██╗ ███████╗ ██████╗  ██╗   ██╗ ███╗   ██╗ ██████╗  ██████╗  ██╗      █████╗  ██╗   ██╗ ███████╗ ██████╗
+-- ██║ ██╔════╝██╔═══██╗ ██║   ██║ ████╗  ██║ ██╔══██╗ ██╔══██╗ ██║     ██╔══██╗ ╚██╗ ██╔╝ ██╔════╝ ██╔══██╗
+-- ██║ ███████╗██║   ██║ ██║   ██║ ██╔██╗ ██║ ██║  ██║ ██████╔╝ ██║     ███████║  ╚████╔╝  █████╗   ██████╔╝
+-- ██║ ╚════██║██║   ██║ ██║   ██║ ██║╚██╗██║ ██║  ██║ ██╔═══╝  ██║     ██╔══██║   ╚██╔╝   ██╔══╝   ██╔══██╗
+-- ██║ ███████║╚██████╔╝ ╚██████╔╝ ██║ ╚████║ ██████╔╝ ██║      ███████╗██║  ██║    ██║    ███████╗ ██║  ██║
+-- ╚═╝ ╚══════╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═════╝  ╚═╝      ╚══════╝╚═╝  ╚═╝    ╚═╝    ╚══════╝ ╚═╝  ╚═╝
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 local addonName, addon = ...
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
@@ -116,6 +125,20 @@ L["ResetToDefaults"] = "Reset to Defaults"
 L["ResetConfirm"] = "Reset all settings to defaults?"
 L["SettingsResetSuccess"] = Msg(Colors.Green .. "Settings reset to defaults!" .. Colors.Reset)
 
+-- Sound Channel
+L["SoundSettings"] = Colors.iSP .. "Sound"
+L["SoundChannelLabel"] = "Sound Channel"
+L["DescSoundChannel"] = Colors.Gray .. "Which audio channel to play sounds through. Try 'Dialog' if sounds are too quiet." .. Colors.Reset
+L["ChannelMaster"] = "Master"
+L["ChannelSFX"] = "SFX (Sound Effects)"
+L["ChannelMusic"] = "Music"
+L["ChannelAmbience"] = "Ambience"
+L["ChannelDialog"] = "Dialog"
+L["VolumeLabel"] = "Channel Volume"
+L["DescVolume"] = Colors.Gray .. "Adjust the volume of the selected audio channel. This changes the game's channel volume." .. Colors.Reset
+L["SoundfileVolumeLabel"] = "Soundfile Volume"
+L["DescSoundfileVolume"] = Colors.Gray .. "Volume for iSP sounds only. Temporarily adjusts channel volume during playback." .. Colors.Reset
+
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - Sounds Tab                          │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
@@ -178,6 +201,16 @@ L["DescTriggerPvPKillingSpree"] = "When you reach 5 kills without dying"
 L["DescTriggerPvPDominating"] = "When you reach 10 kills without dying"
 L["DescTriggerPvPUnstoppable"] = "When you reach 15 kills without dying"
 L["DescTriggerPvPGodlike"] = "When you reach 20+ kills without dying"
+
+-- Pet Trigger Names
+L["TriggerPetSummoned"] = "Pet Summoned"
+L["TriggerPetDismissed"] = "Pet Dismissed"
+L["TriggerPetDied"] = "Pet Died"
+
+-- Pet Trigger Descriptions
+L["DescTriggerPetSummoned"] = "When your pet is summoned"
+L["DescTriggerPetDismissed"] = "When your pet is dismissed"
+L["DescTriggerPetDied"] = "When your pet dies"
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - About Tab                           │

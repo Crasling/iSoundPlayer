@@ -1,3 +1,12 @@
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
+-- ██╗ ███████╗ ██████╗  ██╗   ██╗ ███╗   ██╗ ██████╗  ██████╗  ██╗      █████╗  ██╗   ██╗ ███████╗ ██████╗
+-- ██║ ██╔════╝██╔═══██╗ ██║   ██║ ████╗  ██║ ██╔══██╗ ██╔══██╗ ██║     ██╔══██╗ ╚██╗ ██╔╝ ██╔════╝ ██╔══██╗
+-- ██║ ███████╗██║   ██║ ██║   ██║ ██╔██╗ ██║ ██║  ██║ ██████╔╝ ██║     ███████║  ╚████╔╝  █████╗   ██████╔╝
+-- ██║ ╚════██║██║   ██║ ██║   ██║ ██║╚██╗██║ ██║  ██║ ██╔═══╝  ██║     ██╔══██║   ╚██╔╝   ██╔══╝   ██╔══██╗
+-- ██║ ███████║╚██████╔╝ ╚██████╔╝ ██║ ╚████║ ██████╔╝ ██║      ███████╗██║  ██║    ██║    ███████╗ ██║  ██║
+-- ╚═╝ ╚══════╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═════╝  ╚═╝      ╚══════╝╚═╝  ╚═╝    ╚═╝    ╚══════╝ ╚═╝  ╚═╝
+-- ═════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 local addonName, iSP = ...
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
@@ -180,6 +189,9 @@ iSP.TriggerCategories = {
         triggers = {
             "PET_BATTLE_OPENING_START",
             "PET_BATTLE_CLOSE",
+            "PET_SUMMONED",
+            "PET_DISMISSED",
+            "PET_DIED",
         }
     },
     {
@@ -917,6 +929,33 @@ iSP.TriggerMeta = {
         icon = "Interface\\Icons\\INV_Box_PetCarrier_01",
         versions = {min = 50000},
         cooldown = 0,
+    },
+    PET_SUMMONED = {
+        category = "pet_mount",
+        name = "Pet Summoned",
+        desc = "When your pet is summoned",
+        event = nil,
+        icon = "Interface\\Icons\\Spell_Nature_SpiritWolf",
+        versions = "all",
+        cooldown = 2,
+    },
+    PET_DISMISSED = {
+        category = "pet_mount",
+        name = "Pet Dismissed",
+        desc = "When your pet is dismissed",
+        event = nil,
+        icon = "Interface\\Icons\\Spell_Nature_NullifyDisease",
+        versions = "all",
+        cooldown = 2,
+    },
+    PET_DIED = {
+        category = "pet_mount",
+        name = "Pet Died",
+        desc = "When your pet dies",
+        event = nil,
+        icon = "Interface\\Icons\\Ability_Creature_Cursed_05",
+        versions = "all",
+        cooldown = 2,
     },
 
     -- ── UI & System ────────────────────────────────────────────────────────────
