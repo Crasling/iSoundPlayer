@@ -128,7 +128,7 @@ L["SettingsResetSuccess"] = Msg(Colors.Green .. "Settings reset to defaults!" ..
 -- Sound Channel
 L["SoundSettings"] = Colors.iSP .. "Sound"
 L["SoundChannelLabel"] = "Sound Channel"
-L["DescSoundChannel"] = Colors.Gray .. "Which audio channel to play sounds through. Try 'Dialog' if sounds are too quiet." .. Colors.Reset
+L["DescSoundChannel"] = Colors.Gray .. "Which audio channel to play sounds through." .. Colors.Reset
 L["ChannelMaster"] = "Master"
 L["ChannelSFX"] = "SFX (Sound Effects)"
 L["ChannelMusic"] = "Music"
@@ -137,7 +137,7 @@ L["ChannelDialog"] = "Dialog"
 L["VolumeLabel"] = "Channel Volume"
 L["DescVolume"] = Colors.Gray .. "Adjust the volume of the selected audio channel. This changes the game's channel volume." .. Colors.Reset
 L["SoundfileVolumeLabel"] = "Soundfile Volume"
-L["DescSoundfileVolume"] = Colors.Gray .. "Volume for iSP sounds only. Temporarily adjusts channel volume during playback." .. Colors.Reset
+L["DescSoundfileVolume"] = Colors.Gray .. "Volume for iSP sounds only. Boosts channels during playback, restores immediately." .. Colors.Reset
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - Sounds Tab                          │
@@ -244,6 +244,7 @@ L["FadeIn"] = "Fade In"
 L["DescFadeIn"] = Colors.Gray .. "Gradually increase volume (not supported by WoW API)" .. Colors.Reset
 L["FadeOut"] = "Fade Out"
 L["DescFadeOut"] = Colors.Gray .. "Gradually decrease volume (not supported by WoW API)" .. Colors.Reset
+L["TestDurationSuffix"] = "s"
 L["StopSound"] = "Stop Sound"
 L["StopAllSounds"] = "Stop All Sounds"
 L["AllSoundsStopped"] = Msg(Colors.Yellow .. "All sounds stopped.")

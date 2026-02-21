@@ -414,8 +414,12 @@ function iSP:CreateOptionsPanel()
     if descH < 12 then descH = 12 end
     y = y - descH - 6
 
-    -- Sound Channel dropdown
-    local channelOptions = {"Master", "SFX", "Music", "Ambience", "Dialog"}
+    -- Sound Channel dropdown (Dialog only exists on MoP+ / Retail, TOC >= 50000)
+    local channelOptions = {"Master", "SFX", "Music", "Ambience"}
+    local tocVersion = iSP.GameTocVersion or 0
+    if tocVersion >= 50000 then
+        table.insert(channelOptions, "Dialog")
+    end
     local channelDisplayNames = {
         Master = L["ChannelMaster"],
         SFX = L["ChannelSFX"],
@@ -496,7 +500,7 @@ function iSP:CreateOptionsPanel()
         valueText:SetPoint("LEFT", track, "RIGHT", 12, 0)
 
         -- State
-        local slider = { value = 0, onValueChanged = nil }
+        local slider = { value = 0, onValueChanged = nil, locked = false }
 
         local function UpdateDisplay(val)
             val = math.floor(val + 0.5)
@@ -535,9 +539,21 @@ function iSP:CreateOptionsPanel()
             return self.value
         end
 
+        function slider:SetLocked(locked)
+            self.locked = locked
+            if locked then
+                fill:SetVertexColor(0.4, 0.4, 0.4, 0.7)
+                thumbTex:SetVertexColor(0.5, 0.5, 0.5)
+            else
+                fill:SetVertexColor(1, 0.59, 0.09, 0.7)
+                thumbTex:SetVertexColor(1, 1, 1)
+            end
+        end
+
         -- Click on track
         track:EnableMouse(true)
         track:SetScript("OnMouseDown", function(self, button)
+            if slider.locked then return end
             if button == "LeftButton" then
                 local x = select(1, GetCursorPosition()) / self:GetEffectiveScale()
                 local left = self:GetLeft()
@@ -551,6 +567,7 @@ function iSP:CreateOptionsPanel()
         -- Drag thumb
         thumb:EnableMouse(true)
         thumb:SetScript("OnMouseDown", function(self, button)
+            if slider.locked then return end
             if button == "LeftButton" then self.dragging = true end
         end)
         thumb:SetScript("OnMouseUp", function(self)
@@ -559,6 +576,7 @@ function iSP:CreateOptionsPanel()
 
         track:SetScript("OnUpdate", function(self)
             if thumb.dragging then
+                if slider.locked then thumb.dragging = false return end
                 local x = select(1, GetCursorPosition()) / self:GetEffectiveScale()
                 local left = self:GetLeft()
                 local fraction = (x - left) / VSLIDER_WIDTH
@@ -573,6 +591,7 @@ function iSP:CreateOptionsPanel()
         -- Mousewheel
         track:EnableMouseWheel(true)
         track:SetScript("OnMouseWheel", function(self, delta)
+            if slider.locked then return end
             local newVal = slider.value + (delta * step)
             if newVal < minVal then newVal = minVal end
             if newVal > maxVal then newVal = maxVal end
@@ -649,6 +668,10 @@ function iSP:CreateOptionsPanel()
     end
 
     UpdateSoundfileVolumeSlider()
+
+    -- Expose sliders so PlayWithVolume/RestoreVolumes can lock/unlock them
+    iSP.ChannelVolSlider = channelVolSlider
+    iSP.SfVolSlider = sfVolSlider
 
     -- Initialize dropdown (needs slider references)
     UIDropDownMenu_Initialize(channelDropdown, function(self, level)
@@ -813,13 +836,58 @@ function iSP:CreateOptionsPanel()
                 soundText:SetPoint("LEFT", soundFrame, "LEFT", 8, 0)
                 soundText:SetText(Colors.Green .. i .. ".|r " .. sound)
 
-                -- Test button
+                -- Duration input (seconds for test playback)
+                if not iSPSettings.SoundDurations then iSPSettings.SoundDurations = {} end
+                local durBox = CreateFrame("EditBox", nil, soundFrame, "InputBoxTemplate")
+                durBox:SetSize(36, 20)
+                durBox:SetPoint("RIGHT", soundFrame, "RIGHT", -168, 0)
+                durBox:SetAutoFocus(false)
+                durBox:SetMaxLetters(4)
+                durBox:SetFontObject(GameFontHighlightSmall)
+                durBox:SetJustifyH("CENTER")
+                local savedDur = iSPSettings.SoundDurations[sound] or 3
+                durBox:SetText(tostring(savedDur))
+                durBox:SetScript("OnChar", function(self, char)
+                    -- Only allow digits and dot
+                    local text = self:GetText()
+                    local cleaned = text:gsub("[^%d%.]", "")
+                    -- Only one dot allowed
+                    local _, dotCount = cleaned:gsub("%.", "")
+                    if dotCount > 1 then
+                        cleaned = cleaned:match("^(%d*%.?%d*)") or ""
+                    end
+                    if cleaned ~= text then
+                        self:SetText(cleaned)
+                    end
+                end)
+                durBox:SetScript("OnEditFocusLost", function(self)
+                    local val = tonumber(self:GetText()) or 3
+                    if val < 0.5 then val = 0.5 end
+                    if val > 30 then val = 30 end
+                    self:SetText(tostring(val))
+                    iSPSettings.SoundDurations[sound] = val
+                end)
+                durBox:SetScript("OnEnterPressed", function(self)
+                    self:ClearFocus()
+                end)
+
+                local durSuffix = soundFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                durSuffix:SetPoint("LEFT", durBox, "RIGHT", 2, 0)
+                durSuffix:SetText(L["TestDurationSuffix"])
+
+                -- Test button (disabled while a test is active)
                 local testBtn = CreateFrame("Button", nil, soundFrame, "UIPanelButtonTemplate")
                 testBtn:SetSize(50, 20)
-                testBtn:SetPoint("RIGHT", soundFrame, "RIGHT", -60, 0)
+                testBtn:SetPoint("RIGHT", soundFrame, "RIGHT", -68, 0)
                 testBtn:SetText(L["TestBtn"])
-                testBtn:SetScript("OnClick", function()
+                testBtn:SetScript("OnClick", function(self)
+                    if iSP.TestingSound then return end
+                    self:Disable()
                     iSP:TestSound(sound)
+                    local dur = (iSPSettings.SoundDurations and iSPSettings.SoundDurations[sound]) or 3
+                    C_Timer.After(dur, function()
+                        if self and self.Enable then self:Enable() end
+                    end)
                 end)
 
                 -- Remove button
@@ -828,12 +896,15 @@ function iSP:CreateOptionsPanel()
                 removeBtn:SetPoint("RIGHT", soundFrame, "RIGHT", -4, 0)
                 removeBtn:SetText(L["RemoveSound"])
                 removeBtn:SetScript("OnClick", function()
-                    -- Remove from table
+                    -- Remove from table and clean up duration
                     for j, s in ipairs(iSPSettings.SoundFiles) do
                         if s == sound then
                             table.remove(iSPSettings.SoundFiles, j)
                             break
                         end
+                    end
+                    if iSPSettings.SoundDurations then
+                        iSPSettings.SoundDurations[sound] = nil
                     end
                     -- Refresh list
                     UpdateSoundList()

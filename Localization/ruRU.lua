@@ -10,6 +10,7 @@
 local addonName, addon = ...
 
 -- Translator ZamestoTV
+-- Lines marked "AI translated" may not be fully correct.
 -- Only load Russian localization on Russian clients
 if GetLocale() ~= "ruRU" then return end
 
@@ -130,18 +131,18 @@ L["ResetConfirm"]      = "Сбросить все настройки на зна
 L["SettingsResetSuccess"] = Msg(Colors.Green .. "Настройки сброшены на стандартные!" .. Colors.Reset)
 
 -- Sound Channel
-L["SoundSettings"] = Colors.iSP .. "Звук"
-L["SoundChannelLabel"] = "Аудиоканал"
-L["DescSoundChannel"] = Colors.Gray .. "Через какой аудиоканал воспроизводить звуки. Попробуйте 'Диалоги', если звуки слишком тихие." .. Colors.Reset
+L["SoundSettings"] = Colors.iSP .. "Звук" -- AI translated
+L["SoundChannelLabel"] = "Аудиоканал" -- AI translated
+L["DescSoundChannel"] = Colors.Gray .. "Через какой аудиоканал воспроизводить звуки." .. Colors.Reset -- AI translated
 L["ChannelMaster"] = "Master"
-L["ChannelSFX"] = "SFX (Звуковые эффекты)"
-L["ChannelMusic"] = "Музыка"
-L["ChannelAmbience"] = "Окружение"
-L["ChannelDialog"] = "Диалоги"
-L["VolumeLabel"] = "Громкость канала"
-L["DescVolume"] = Colors.Gray .. "Настройка громкости выбранного аудиоканала. Изменяет громкость канала в игре." .. Colors.Reset
-L["SoundfileVolumeLabel"] = "Громкость звуковых файлов"
-L["DescSoundfileVolume"] = Colors.Gray .. "Громкость только для звуков iSP. Временно изменяет громкость канала при воспроизведении." .. Colors.Reset
+L["ChannelSFX"] = "SFX (Звуковые эффекты)" -- AI translated
+L["ChannelMusic"] = "Музыка" -- AI translated
+L["ChannelAmbience"] = "Окружение" -- AI translated
+L["ChannelDialog"] = "Диалоги" -- AI translated
+L["VolumeLabel"] = "Громкость канала" -- AI translated
+L["DescVolume"] = Colors.Gray .. "Настройка громкости выбранного аудиоканала. Изменяет громкость канала в игре." .. Colors.Reset -- AI translated
+L["SoundfileVolumeLabel"] = "Громкость звуковых файлов" -- AI translated
+L["DescSoundfileVolume"] = Colors.Gray .. "Громкость только для звуков iSP. Усиливает каналы при воспроизведении, восстанавливает сразу." .. Colors.Reset -- AI translated
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - Sounds Tab                          │
@@ -207,14 +208,14 @@ L["DescTriggerPvPUnstoppable"]   = "При 15 убийствах без смер
 L["DescTriggerPvPGodlike"]       = "При 20+ убийствах без смерти"
 
 -- Pet Trigger Names
-L["TriggerPetSummoned"]  = "Питомец призван"
-L["TriggerPetDismissed"] = "Питомец отпущен"
-L["TriggerPetDied"]      = "Питомец погиб"
+L["TriggerPetSummoned"]  = "Питомец призван" -- AI translated
+L["TriggerPetDismissed"] = "Питомец отпущен" -- AI translated
+L["TriggerPetDied"]      = "Питомец погиб" -- AI translated
 
 -- Pet Trigger Descriptions
-L["DescTriggerPetSummoned"]  = "При призыве питомца"
-L["DescTriggerPetDismissed"] = "При отпускании питомца"
-L["DescTriggerPetDied"]      = "При гибели питомца"
+L["DescTriggerPetSummoned"]  = "При призыве питомца" -- AI translated
+L["DescTriggerPetDismissed"] = "При отпускании питомца" -- AI translated
+L["DescTriggerPetDied"]      = "При гибели питомца" -- AI translated
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - About Tab                           │
@@ -246,6 +247,7 @@ L["FadeIn"]          = "Плавное нарастание"
 L["DescFadeIn"]      = Colors.Gray .. "Плавное увеличение громкости (не поддерживается API WoW)" .. Colors.Reset
 L["FadeOut"]         = "Плавное затухание"
 L["DescFadeOut"]     = Colors.Gray .. "Плавное уменьшение громкости (не поддерживается API WoW)" .. Colors.Reset
+L["TestDurationSuffix"] = "с" -- AI translated
 L["StopSound"]       = "Остановить звук"
 L["StopAllSounds"]   = "Остановить все звуки"
 L["AllSoundsStopped"] = Msg(Colors.Yellow .. "Все звуки остановлены." .. Colors.Reset)

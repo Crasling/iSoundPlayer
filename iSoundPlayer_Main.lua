@@ -103,6 +103,7 @@ iSP.SettingsDefault = {
 
     -- Sound
     SoundFiles = {},
+    SoundDurations = {},  -- Per-sound test duration in seconds (keyed by filename)
 
     -- Triggers
     Triggers = {
@@ -319,9 +320,39 @@ iSP.ActiveSounds = {}
 iSP.TriggerLastFired = {}  -- Cooldown tracking: triggerID -> GetTime()
 iSP.EventToTriggers = {}   -- Lookup: WoW event -> {triggerID, ...}
 
+-- Saved original volumes before any iSP boost (restored when last sound stops)
+iSP.SavedVolumes = nil
+
+-- Lock/unlock volume sliders during playback
+function iSP:LockVolumeSliders(locked)
+    if iSP.ChannelVolSlider and iSP.ChannelVolSlider.SetLocked then
+        iSP.ChannelVolSlider:SetLocked(locked)
+    end
+    if iSP.SfVolSlider and iSP.SfVolSlider.SetLocked then
+        iSP.SfVolSlider:SetLocked(locked)
+    end
+end
+
+-- Restore original channel volumes if no more iSP sounds are active
+function iSP:RestoreVolumes()
+    if iSP.SavedVolumes and not next(iSP.ActiveSounds) then
+        for cvar, origVal in pairs(iSP.SavedVolumes) do
+            SetCVar(cvar, origVal)
+        end
+        iSP.SavedVolumes = nil
+        iSP:LockVolumeSliders(false)
+        Debug("All sounds stopped, volumes restored", 3)
+    end
+end
+
 -- Stop currently playing sound
 function iSP:StopSound(soundID)
     if iSP.ActiveSounds[soundID] then
+        -- Stop the actual audio via WoW API
+        local handle = iSP.ActiveSounds[soundID].handle
+        if handle then
+            StopSound(handle)
+        end
         -- Cancel all timers for this sound
         for _, timer in ipairs(iSP.ActiveSounds[soundID].timers or {}) do
             if timer then
@@ -333,14 +364,29 @@ function iSP:StopSound(soundID)
         if iSPSettings.DebugMode then
             print(L["PrintPrefix"] .. Colors.Red .. "Stopped sound: " .. soundID)
         end
+
+        -- Restore volumes if this was the last active sound
+        self:RestoreVolumes()
     end
 end
 
 -- Stop all currently playing sounds
 function iSP:StopAllSounds()
     for soundID, _ in pairs(iSP.ActiveSounds) do
-        self:StopSound(soundID)
+        -- Stop audio and cancel timers, but don't restore volumes yet
+        local handle = iSP.ActiveSounds[soundID].handle
+        if handle then
+            StopSound(handle)
+        end
+        for _, timer in ipairs(iSP.ActiveSounds[soundID].timers or {}) do
+            if timer then
+                timer:Cancel()
+            end
+        end
+        iSP.ActiveSounds[soundID] = nil
     end
+    -- Restore volumes once after clearing all sounds
+    self:RestoreVolumes()
 end
 
 -- Play a sound file by name with advanced options
@@ -399,24 +445,89 @@ function iSP:PlaySound(fileName, options)
     --
     -- We can simulate some of these with timers and workarounds:
 
-    -- Volume helper: temporarily adjusts channel volume for iSP sounds
+    -- Volume helper: boosts channel volume so iSP sounds are always audible.
+    -- Boosts Master + target channel, scales down other channels to preserve their
+    -- effective volume. Volumes stay boosted during playback and are restored when
+    -- the last active iSP sound stops (via iSP:RestoreVolumes).
+    -- Returns: success (bool), soundHandle (number or nil)
+    local function VolPct(v)
+        return math.floor(v * 100 + 0.5) .. "%"
+    end
+
     local function PlayWithVolume(path, ch)
-        local vol = iSPSettings.iSPVolume or 100
-        if vol >= 100 then
-            return pcall(PlaySoundFile, path, ch)
+        local vol = (iSPSettings.iSPVolume or 100) / 100  -- 0.0 to 1.0
+
+        -- Save original volumes only on first iSP sound (before any boost)
+        if not iSP.SavedVolumes then
+            iSP.SavedVolumes = {}
+            for name, cvar in pairs(iSP.ChannelCVars) do
+                local val = GetCVar(cvar)
+                if val then
+                    iSP.SavedVolumes[cvar] = tonumber(val) or 1.0
+                end
+            end
+            iSP:LockVolumeSliders(true)
         end
-        local cvar = iSP.ChannelCVars[ch] or "Sound_MasterVolume"
-        local origVol = tonumber(GetCVar(cvar)) or 1.0
-        SetCVar(cvar, origVol * (vol / 100))
-        local ok, err = pcall(PlaySoundFile, path, ch)
-        C_Timer.After(0, function() SetCVar(cvar, origVol) end)
-        return ok, err
+
+        -- Always use original (pre-boost) values as reference for scaling
+        local origMaster = iSP.SavedVolumes["Sound_MasterVolume"] or 1.0
+        Debug("PlayWithVolume: Boosting for " .. ch .. " (iSP Volume: " .. VolPct(vol) .. ")", 3)
+
+        if ch == "Master" then
+            -- iSP sound plays through Master: set Master to iSPVolume
+            -- Scale subs to preserve effective: sub * origMaster = sub_new * vol
+            Debug("  Master: " .. VolPct(origMaster) .. " -> " .. VolPct(vol), 3)
+            SetCVar("Sound_MasterVolume", vol)
+            if vol > 0 then
+                for name, cvar in pairs(iSP.ChannelCVars) do
+                    if iSP.SavedVolumes[cvar] and name ~= "Master" then
+                        local newVal = math.max(math.min(iSP.SavedVolumes[cvar] * origMaster / vol, 1.0), 0.01)
+                        Debug("  " .. name .. ": " .. VolPct(iSP.SavedVolumes[cvar]) .. " -> " .. VolPct(newVal) .. " (preserved)", 3)
+                        SetCVar(cvar, newVal)
+                    end
+                end
+            end
+        else
+            -- iSP sound plays through sub-channel: set Master to 1.0, target to iSPVolume
+            -- Scale other subs to preserve effective: origMaster * sub = 1.0 * sub_new
+            Debug("  Master: " .. VolPct(origMaster) .. " -> 100%", 3)
+            SetCVar("Sound_MasterVolume", 1.0)
+            local targetCvar = iSP.ChannelCVars[ch]
+            if targetCvar then
+                Debug("  " .. ch .. ": " .. VolPct(iSP.SavedVolumes[targetCvar] or 0) .. " -> " .. VolPct(vol), 3)
+                SetCVar(targetCvar, vol)
+            end
+            for name, cvar in pairs(iSP.ChannelCVars) do
+                if iSP.SavedVolumes[cvar] and name ~= "Master" and name ~= ch then
+                    local newVal = math.max(iSP.SavedVolumes[cvar] * origMaster, 0.01)
+                    Debug("  " .. name .. ": " .. VolPct(iSP.SavedVolumes[cvar]) .. " -> " .. VolPct(newVal) .. " (preserved)", 3)
+                    SetCVar(cvar, newVal)
+                end
+            end
+        end
+
+        -- Play the sound — volumes stay boosted during playback
+        local ok, willPlay, handle = pcall(PlaySoundFile, path, ch)
+
+        if ok and willPlay then
+            return true, handle
+        end
+
+        -- Play failed — if no other active sounds, restore volumes
+        if not next(iSP.ActiveSounds) then
+            iSP:RestoreVolumes()
+        end
+        return false, nil
     end
 
     local function PlayWithOptions()
-        -- Try to play the sound
+        -- Try to play the sound (Dialog channel requires TOC >= 50000 / MoP+)
         local channel = iSPSettings.SoundChannel or "Master"
-        local success, errorMsg = PlayWithVolume(soundPath, channel)
+        if channel == "Dialog" and (iSP.GameTocVersion or 0) < 50000 then
+            channel = "Master"
+        end
+        local vol = iSPSettings.iSPVolume or 100
+        local success, soundHandle = PlayWithVolume(soundPath, channel)
 
         if not success and iSPSettings.DebugMode then
             print(string.format(L["SoundFailed"], soundPath))
@@ -425,15 +536,19 @@ function iSP:PlaySound(fileName, options)
             print(string.format(L["SoundPlaying"], fileName))
         end
 
-        -- Track active sound
+        if success then
+            Debug("Channel: " .. channel .. ", iSP Volume: " .. vol .. "%", 3)
+        end
+
+        -- Track active sound (store handle so StopSound can actually stop it)
         iSP.ActiveSounds[soundID] = {
             fileName = fileName,
+            handle = soundHandle,
             startTime = time(),
             timers = {},
         }
 
-        -- If duration is set, we need to play another sound to "stop" it
-        -- (WoW API limitation: can't actually stop a sound once started)
+        -- If duration is set, stop the sound after that many seconds
         if duration > 0 then
             local stopTimer = C_Timer.NewTimer(duration, function()
                 -- Play silence or remove from active list
@@ -458,7 +573,10 @@ function iSP:PlaySound(fileName, options)
                 local soundLength = duration > 0 and duration or 3 -- Default 3 seconds if no duration set
 
                 currentLoop = currentLoop + 1
-                PlayWithVolume(soundPath, iSPSettings.SoundChannel or "Master")
+                local _, newHandle = PlayWithVolume(soundPath, iSPSettings.SoundChannel or "Master")
+                if iSP.ActiveSounds[soundID] then
+                    iSP.ActiveSounds[soundID].handle = newHandle
+                end
 
                 if currentLoop < loopCount then
                     loopTimer = C_Timer.NewTimer(soundLength, LoopSound)
@@ -491,10 +609,22 @@ function iSP:PlaySound(fileName, options)
     end
 end
 
--- Test sound playback
+-- Test sound playback (same as trigger but with stop timer and button lock)
+iSP.TestingSound = false
+
 function iSP:TestSound(fileName)
+    if iSP.TestingSound then return false end
+    iSP.TestingSound = true
+
     print(string.format(L["SoundTesting"], fileName))
-    return self:PlaySound(fileName)
+    local dur = (iSPSettings.SoundDurations and iSPSettings.SoundDurations[fileName]) or 3
+    local result = self:PlaySound(fileName)
+    C_Timer.After(dur, function()
+        iSP:StopAllSounds()
+        iSP.TestingSound = false
+        Debug("TestSound: stopped after " .. dur .. "s", 3)
+    end)
+    return result
 end
 
 -- Play sound for a trigger
@@ -522,8 +652,14 @@ function iSP:PlayTriggerSound(triggerID)
     end
 
     -- Build options from trigger settings
+    -- Use per-sound duration from SoundDurations if trigger has no explicit duration
+    local dur = trigger.duration or 0
+    if dur == 0 and iSPSettings.SoundDurations then
+        dur = iSPSettings.SoundDurations[trigger.sound] or 0
+    end
+
     local options = {
-        duration = trigger.duration or 0,
+        duration = dur,
         startOffset = trigger.startOffset or 0,
         loop = trigger.loop or false,
         loopCount = trigger.loopCount or 1,
