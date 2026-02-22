@@ -280,11 +280,17 @@ function iSP:InitializeSettings()
     if iSP.TriggerMeta then
         local defaultTrigger = {
             enabled = false, sound = "", duration = 0, startOffset = 0,
-            loop = false, loopCount = 1, fadeIn = false, fadeOut = false
+            loop = false, loopCount = 1, fadeIn = false, fadeOut = false,
+            announce = ""
         }
         for triggerID, _ in pairs(iSP.TriggerMeta) do
             if not iSPSettings.Triggers[triggerID] then
                 iSPSettings.Triggers[triggerID] = CopyTable(defaultTrigger)
+            else
+                -- Ensure announce field exists for existing triggers (upgrade path)
+                if iSPSettings.Triggers[triggerID].announce == nil then
+                    iSPSettings.Triggers[triggerID].announce = ""
+                end
             end
         end
     end
@@ -667,7 +673,61 @@ function iSP:PlayTriggerSound(triggerID)
         fadeOut = trigger.fadeOut or false,
     }
 
-    return self:PlaySound(trigger.sound, options)
+    local success = self:PlaySound(trigger.sound, options)
+
+    -- Send announcement if configured
+    if success and trigger.announce and trigger.announce ~= "" then
+        self:SendAnnouncement(triggerID, trigger.announce)
+    end
+
+    return success
+end
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                            Chat Announcements                                 │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+function iSP:SendAnnouncement(triggerID, channel)
+    local meta = iSP.TriggerMeta and iSP.TriggerMeta[triggerID]
+    if not meta then return end
+
+    local triggerName = meta.name or triggerID
+    local message = string.format(L["AnnounceSent"], triggerName)
+
+    -- Map channel to WoW API chat type and validate group membership
+    local chatType
+    if channel == "GENERAL" then
+        -- Auto-select: Battleground > Raid > Party
+        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
+            chatType = "INSTANCE_CHAT"
+        elseif IsInRaid() then
+            chatType = "RAID"
+        elseif IsInGroup() then
+            chatType = "PARTY"
+        end
+    elseif channel == "PARTY" then
+        if IsInGroup() and not IsInRaid() then
+            chatType = "PARTY"
+        end
+    elseif channel == "RAID" then
+        if IsInRaid() then
+            chatType = "RAID"
+        end
+    elseif channel == "BATTLEGROUND" then
+        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
+            chatType = "INSTANCE_CHAT"
+        end
+    elseif channel == "GUILD" then
+        if IsInGuild() then
+            chatType = "GUILD"
+        end
+    end
+
+    if chatType then
+        SendChatMessage(message, chatType)
+        Debug(string.format("Announcement sent to %s: %s", channel, message), 3)
+    else
+        Debug(string.format("Announcement skipped (%s): not in correct group", channel), 2)
+    end
 end
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮

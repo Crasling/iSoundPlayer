@@ -1185,7 +1185,7 @@ function iSP:CreateOptionsPanel()
     -- Create a single trigger frame (called once per trigger, then reused)
     local function CreateTriggerFrame(triggerID, meta)
         local triggerFrame = CreateFrame("Frame", nil, triggersContent, BACKDROP_TEMPLATE)
-        triggerFrame:SetSize(520, 90)
+        triggerFrame:SetSize(520, 112)
         triggerFrame:SetBackdrop({
             bgFile = "Interface\\BUTTONS\\WHITE8X8",
             edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1283,8 +1283,62 @@ function iSP:CreateOptionsPanel()
             end
         end)
 
+        -- Announce label
+        local announceLabel = triggerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        announceLabel:SetPoint("TOPLEFT", triggerFrame, "TOPLEFT", 10, -70)
+        announceLabel:SetText(L["AnnounceLabel"] or "Announce:")
+
+        -- Announce dropdown button
+        local announceOptions = {
+            { value = "",              label = L["AnnounceOff"] or "Off" },
+            { value = "GENERAL",       label = L["AnnounceGeneral"] or "General" },
+            { value = "PARTY",         label = L["AnnounceParty"] or "Party" },
+            { value = "RAID",          label = L["AnnounceRaid"] or "Raid" },
+            { value = "BATTLEGROUND",  label = L["AnnounceBattleground"] or "Battleground" },
+            { value = "GUILD",         label = L["AnnounceGuild"] or "Guild" },
+        }
+
+        local announceBtn = CreateFrame("Button", nil, triggerFrame, "UIPanelButtonTemplate")
+        announceBtn:SetSize(120, 22)
+        announceBtn:SetPoint("LEFT", announceLabel, "RIGHT", 5, 0)
+
+        -- Set initial text
+        local currentAnnounce = (iSPSettings.Triggers[triggerID] and iSPSettings.Triggers[triggerID].announce) or ""
+        local displayText = L["AnnounceOff"] or "Off"
+        for _, opt in ipairs(announceOptions) do
+            if opt.value == currentAnnounce then
+                displayText = opt.label
+                break
+            end
+        end
+        announceBtn:SetText(displayText)
+
+        -- Announce dropdown menu
+        local announceMenu = CreateFrame("Frame", "iSPAnnounceMenu_" .. triggerID, announceBtn, "UIDropDownMenuTemplate")
+        announceMenu:SetPoint("TOPLEFT", announceBtn, "BOTTOMLEFT", 0, 0)
+        announceMenu:Hide()
+
+        announceBtn:SetScript("OnClick", function(self)
+            UIDropDownMenu_Initialize(announceMenu, function(frame, level)
+                for _, opt in ipairs(announceOptions) do
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = opt.label
+                    info.value = opt.value
+                    info.checked = (iSPSettings.Triggers[triggerID].announce == opt.value)
+                    info.func = function()
+                        iSPSettings.Triggers[triggerID].announce = opt.value
+                        announceBtn:SetText(opt.label)
+                        CloseDropDownMenus()
+                    end
+                    UIDropDownMenu_AddButton(info, level)
+                end
+            end)
+            ToggleDropDownMenu(1, nil, announceMenu, self, 0, 0)
+        end)
+
         triggerFrame.enableCB = enableCB
         triggerFrame.soundDropdown = soundDropdown
+        triggerFrame.announceBtn = announceBtn
 
         return triggerFrame
     end

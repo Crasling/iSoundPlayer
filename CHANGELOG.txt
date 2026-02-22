@@ -17,6 +17,21 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.3.7 - TBC Icon Compatibility
+═══════════════════════════════════════════════════════════
+
+[UPDATED]
+- Replaced all 17 Achievement_ prefixed trigger icons with TBC-safe alternatives
+- 9 trigger icons replaced: Level Up, XP Gained, Target Changed, Quest Turned In,
+  Loot Roll Started, Guild Chat, Entering World, Double Kill, Triple Kill
+- 4 category icons replaced: Player Events, Achievements & Quests, Dungeon & Raid, PvP Kills
+- 2 multi-category icons replaced: Group & Social, PvP Multi-Kills
+
+[NEW]
+- ACHIEVEMENT_EARNED trigger hidden on pre-WotLK clients
+- Dynamic category name: "Achievements & Quests" on WotLK+, "Quests" on Classic/TBC
+
+═══════════════════════════════════════════════════════════
 Version 0.3.5 - Custom Volume Sliders
 ═══════════════════════════════════════════════════════════
 

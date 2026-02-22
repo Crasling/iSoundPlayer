@@ -169,6 +169,16 @@ L["EnableTrigger"]   = "Включить"
 L["SelectSound"]     = "Выберите звук..."
 L["NoSound"]         = "Без звука"
 
+-- Announcements
+L["AnnounceLabel"]         = "Оповещение:" -- ИИ перевод
+L["AnnounceOff"]           = "Выкл" -- ИИ перевод
+L["AnnounceGeneral"]       = "Общий" -- ИИ перевод
+L["AnnounceParty"]         = "Группа" -- ИИ перевод
+L["AnnounceRaid"]          = "Рейд" -- ИИ перевод
+L["AnnounceBattleground"]  = "Поле боя" -- ИИ перевод
+L["AnnounceGuild"]         = "Гильдия" -- ИИ перевод
+L["AnnounceSent"]          = "[iSP] %s" -- ИИ перевод
+
 -- Trigger Names
 L["TriggerPlayerLogin"]      = "Вход в игру"
 L["TriggerPlayerLevelUp"]    = "Повышение уровня"

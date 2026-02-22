@@ -164,6 +164,16 @@ L["EnableTrigger"] = "Enable"
 L["SelectSound"] = "Select Sound..."
 L["NoSound"] = "No Sound"
 
+-- Announcements
+L["AnnounceLabel"] = "Announce:"
+L["AnnounceOff"] = "Off"
+L["AnnounceGeneral"] = "General"
+L["AnnounceParty"] = "Party"
+L["AnnounceRaid"] = "Raid"
+L["AnnounceBattleground"] = "Battleground"
+L["AnnounceGuild"] = "Guild"
+L["AnnounceSent"] = "[iSP] %s"
+
 -- Trigger Names
 L["TriggerPlayerLogin"] = "Player Login"
 L["TriggerPlayerLevelUp"] = "Level Up"
