@@ -87,6 +87,8 @@ L["DebugError"]    = Colors.iSP .. "[iSP]: " .. Colors.Red .. "ОШИБКА: " .
 L["AddonLoaded"]   = Msg(Colors.iSP .. "iSoundPlayer" .. Colors.Green .. " v%s" .. Colors.Reset .. " загружен!")
 L["AddonEnabled"]  = Msg("Аддон включён")
 L["AddonDisabled"] = Msg("Аддон отключён")
+L["WelcomeStart"]  = Msg("Спасибо ") -- ИИ перевод
+L["WelcomeEnd"]    = Colors.iSP .. " за участие в разработке iSoundPlayer, если у вас возникнут проблемы, пожалуйста, свяжитесь с нами на CurseForge в разделе комментариев или в Discord." -- ИИ перевод
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                  Sound Messages                                │
@@ -156,6 +158,10 @@ L["TestSound"]       = "Протестировать"
 L["RegisteredSounds"] = Colors.iSP .. "Зарегистрированные звуки"
 L["NoSoundsRegistered"] = Colors.Gray .. "Пока нет зарегистрированных звуков." .. Colors.Reset
 L["RemoveSound"]     = "Удалить"
+L["DisplayNameLabel"] = Colors.White .. "Отображаемое имя:|r " .. Colors.Gray .. "(необязательно — понятное название для звука)" .. Colors.Reset -- ИИ перевод
+L["RenameSoundPrompt"] = "Введите отображаемое имя для этого звука:" -- ИИ перевод
+L["SaveName"] = "Сохранить" -- ИИ перевод
+L["RenameBtn"] = "Aa" -- ИИ перевод
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                           Options Panel - Triggers Tab                         │
@@ -172,6 +178,7 @@ L["NoSound"]         = "Без звука"
 -- Announcements
 L["AnnounceLabel"]         = "Оповещение:" -- ИИ перевод
 L["AnnounceOff"]           = "Выкл" -- ИИ перевод
+L["AnnounceSelf"]          = "Себе" -- ИИ перевод
 L["AnnounceGeneral"]       = "Общий" -- ИИ перевод
 L["AnnounceParty"]         = "Группа" -- ИИ перевод
 L["AnnounceRaid"]          = "Рейд" -- ИИ перевод
@@ -287,7 +294,8 @@ L["TabIWRPromo"]           = "iWillRemember"
 L["InterfaceSettings"]   = Colors.iSP .. "Интерфейс"
 L["SettingsHeader"]      = Colors.iSP .. "Настройки"
 L["GeneralInfo"]         = Colors.Gray .. "iSoundPlayer позволяет воспроизводить свои MP3-файлы при определённых событиях." .. Colors.Reset
-L["SoundFilesInfoShort"] = Colors.Gray .. "Поместите MP3/OGG-файлы сюда:|r\n" .. Colors.White .. "Interface\\AddOns\\iSoundPlayer\\sounds\\|r\n\n" .. Colors.iSP .. "Примеры звуков:|r " .. Colors.Gray .. "Найдите понравившиеся в папке iSoundPlayer\\_Samples, скопируйте в sounds и зарегистрируйте по имени файла. Перед назначением протестируйте!|r\n\n" .. Colors.iSP .. "ВАЖНО:|r " .. Colors.Gray .. "После добавления файлов выполните /reload" .. Colors.Reset
+L["SoundFilesInfoShort"] = Colors.Gray .. "Поместите MP3/OGG-файлы сюда:|r\n" .. Colors.White .. "Interface\\AddOns\\iSoundPlayer_Sounds\\|r\n" .. Colors.Gray .. "Создайте эту папку рядом с папкой аддона iSoundPlayer.|r\n\n" .. Colors.iSP .. "Примеры звуков:|r " .. Colors.Gray .. "Найдите понравившиеся в папке iSoundPlayer\\_Samples, скопируйте в iSoundPlayer_Sounds и зарегистрируйте по имени файла. Перед назначением протестируйте!|r\n\n" .. Colors.iSP .. "ВАЖНО:|r " .. Colors.Gray .. "После добавления файлов выполните /reload" .. Colors.Reset -- ИИ перевод
+L["CustomSoundsNote"] = Colors.iSP .. "Совет:|r " .. Colors.Gray .. "Создайте отдельную папку |r" .. Colors.White .. "iSoundPlayer_Sounds|r " .. Colors.Gray .. "рядом с папкой аддона. Эта папка не управляется CurseForge — ваши звуки сохранятся при обновлениях." .. Colors.Reset -- ИИ перевод
 L["FilenameInputLabel"]  = Colors.White .. "Имя файла:|r " .. Colors.Gray .. "(например, mysound или mysound.mp3)" .. Colors.Reset
 L["TestBtn"]             = "Тест"
 L["SoundLabel"]          = "Звук:"
@@ -335,7 +343,7 @@ L["MinimapShown"]             = "Кнопка у миникарты показа
 L["SetupGuideHeader"]      = Colors.iSP .. "Руководство по настройке iSoundPlayer|r"
 L["SetupGuideWelcome"]     = Colors.iSP .. "Добро пожаловать в iSoundPlayer!|r\n\n" .. Colors.White .. "Этот аддон позволяет воспроизводить свои MP3/OGG-файлы при различных событиях в игре.|r"
 L["SetupGuideStep1Header"] = Colors.iSP .. "Шаг 1: Добавьте свои звуки|r"
-L["SetupGuideStep1Text"]   = Colors.White .. "1. Перейдите в папку вашего WoW:|r\n" .. Colors.Gray .. "   Interface\\AddOns\\iSoundPlayer\\sounds\\|r\n\n" .. Colors.White .. "2. Поместите туда ваши MP3 или OGG-файлы|r\n\n" .. Colors.White .. "3. В чате введите |r" .. Colors.iSP .. "/reload|r " .. Colors.White .. "(перезапуск игры не нужен)|r\n\n" .. Colors.iSP .. "Примеры звуков:|r " .. Colors.Gray .. "В папке iSoundPlayer\\_Samples лежат готовые сэмплы — скопируйте понравившиеся в sounds и зарегистрируйте их по имени файла. Перед назначением обязательно протестируйте!|r"
+L["SetupGuideStep1Text"]   = Colors.White .. "1. Перейдите в папку аддонов WoW:|r\n" .. Colors.iSP .. "   Interface\\AddOns\\|r\n\n" .. Colors.White .. "2. Создайте новую папку:|r\n" .. Colors.iSP .. "   iSoundPlayer_Sounds|r\n" .. Colors.Gray .. "   (Эта отдельная папка не управляется CurseForge)|r\n\n" .. Colors.White .. "3. Поместите туда ваши MP3 или OGG-файлы|r\n\n" .. Colors.White .. "4. В чате введите |r" .. Colors.iSP .. "/reload|r " .. Colors.White .. "(перезапуск игры не нужен)|r\n\n" .. Colors.iSP .. "Примеры звуков:|r " .. Colors.Gray .. "В папке iSoundPlayer\\_Samples лежат готовые сэмплы — скопируйте понравившиеся в iSoundPlayer_Sounds и зарегистрируйте их по имени файла. Перед назначением обязательно протестируйте!|r" -- ИИ перевод
 L["SetupGuideStep2Header"] = Colors.iSP .. "Шаг 2: Зарегистрируйте звуки|r"
 L["SetupGuideStep2Text"]   = Colors.White .. "1. Откройте настройки командой |r" .. Colors.Yellow .. "/isp|r " .. Colors.White .. "или кликом по иконке у миникарты|r\n\n" .. Colors.White .. "2. Перейдите во вкладку |r" .. Colors.iSP .. "Звуки|r\n\n" .. Colors.White .. "3. Введите имя файла и выберите его из списка|r\n\n" .. Colors.White .. "4. Нажмите |r" .. Colors.Green .. "Добавить звук|r\n\n" .. Colors.White .. "5. Нажмите |r" .. Colors.Yellow .. "Протестировать|r " .. Colors.White .. "для проверки|r"
 L["SetupGuideStep3Header"] = Colors.iSP .. "Шаг 3: Настройте триггеры|r"

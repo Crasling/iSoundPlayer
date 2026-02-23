@@ -82,6 +82,8 @@ L["DebugError"] = Colors.iSP .. "[iSP]: " .. Colors.Red .. "ERROR: " .. Colors.R
 L["AddonLoaded"] = Msg(Colors.iSP .. "iSoundPlayer" .. Colors.Green .. " v%s" .. Colors.Reset .. " loaded!")
 L["AddonEnabled"] = Msg("Addon enabled")
 L["AddonDisabled"] = Msg("Addon disabled")
+L["WelcomeStart"] = Msg("Thank you ")
+L["WelcomeEnd"] = Colors.iSP .. " for being part of the development of iSoundPlayer, if you get into any issues please reach out on CurseForge in the comment section or Discord."
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                  Sound Messages                                │
@@ -151,6 +153,10 @@ L["TestSound"] = "Test Sound"
 L["RegisteredSounds"] = Colors.iSP .. "Registered Sounds"
 L["NoSoundsRegistered"] = Colors.Gray .. "No sound files registered yet." .. Colors.Reset
 L["RemoveSound"] = "Remove"
+L["DisplayNameLabel"] = Colors.White .. "Display Name:|r " .. Colors.Gray .. "(optional - friendly name for the sound)" .. Colors.Reset
+L["RenameSoundPrompt"] = "Enter a display name for this sound:"
+L["SaveName"] = "Save"
+L["RenameBtn"] = "Aa"
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                           Options Panel - Triggers Tab                         │
@@ -167,6 +173,7 @@ L["NoSound"] = "No Sound"
 -- Announcements
 L["AnnounceLabel"] = "Announce:"
 L["AnnounceOff"] = "Off"
+L["AnnounceSelf"] = "Self"
 L["AnnounceGeneral"] = "General"
 L["AnnounceParty"] = "Party"
 L["AnnounceRaid"] = "Raid"
@@ -284,7 +291,8 @@ L["TabIWRPromo"] = "iWillRemember"
 L["InterfaceSettings"] = Colors.iSP .. "Interface"
 L["SettingsHeader"] = Colors.iSP .. "Settings"
 L["GeneralInfo"] = Colors.Gray .. "iSoundPlayer allows you to play custom MP3 files at specific triggers." .. Colors.Reset
-L["SoundFilesInfoShort"] = Colors.Gray .. "Place your MP3 or OGG files in:|r\n" .. Colors.White .. "Interface\\AddOns\\iSoundPlayer\\sounds\\|r\n\n" .. Colors.iSP .. "Sample Sounds:|r " .. Colors.Gray .. "Browse the iSoundPlayer\\_Samples folder, copy your favorites to the sounds folder, then register them here using their filename. Test before assigning!|r\n\n" .. Colors.iSP .. "IMPORTANT:|r " .. Colors.Gray .. "Use /reload after adding files (no restart needed)" .. Colors.Reset
+L["SoundFilesInfoShort"] = Colors.Gray .. "Place your MP3 or OGG files in:|r\n" .. Colors.White .. "Interface\\AddOns\\iSoundPlayer_Sounds\\|r\n" .. Colors.Gray .. "Create this folder next to the iSoundPlayer addon folder.|r\n\n" .. Colors.iSP .. "Sample Sounds:|r " .. Colors.Gray .. "Browse the iSoundPlayer\\_Samples folder, copy your favorites into iSoundPlayer_Sounds, then register them here using their filename. Test before assigning!|r\n\n" .. Colors.iSP .. "IMPORTANT:|r " .. Colors.Gray .. "Use /reload after adding files (no restart needed)" .. Colors.Reset
+L["CustomSoundsNote"] = Colors.iSP .. "Tip:|r " .. Colors.Gray .. "Create a standalone |r" .. Colors.White .. "iSoundPlayer_Sounds|r " .. Colors.Gray .. "folder next to the addon folder. This folder is not managed by CurseForge and your sounds will survive updates." .. Colors.Reset
 L["FilenameInputLabel"] = Colors.White .. "Filename:|r " .. Colors.Gray .. "(e.g., mysound or mysound.mp3)" .. Colors.Reset
 L["TestBtn"] = "Test"
 L["SoundLabel"] = "Sound:"
@@ -332,7 +340,7 @@ L["MinimapShown"] = "Minimap button shown"
 L["SetupGuideHeader"] = Colors.iSP .. "iSoundPlayer Setup Guide|r"
 L["SetupGuideWelcome"] = Colors.iSP .. "Welcome to iSoundPlayer!|r\n\n" .. Colors.White .. "This addon lets you play custom MP3 or OGG sound files when game events happen.|r"
 L["SetupGuideStep1Header"] = Colors.iSP .. "Step 1: Add Your Sound Files|r"
-L["SetupGuideStep1Text"] = Colors.White .. "1. Navigate to your WoW folder:|r\n" .. Colors.Gray .. "   Interface\\AddOns\\iSoundPlayer\\sounds\\|r\n\n" .. Colors.White .. "2. Place your MP3 or OGG files in the sounds folder|r\n\n" .. Colors.White .. "3. Type |r" .. Colors.iSP .. "/reload|r " .. Colors.White .. "in chat (no restart needed)|r\n\n" .. Colors.iSP .. "Sample Sounds:|r " .. Colors.Gray .. "Find samples you like in the iSoundPlayer_Samples folder, copy them into the sounds folder, then use their filename when registering sounds in-game. Test them before assigning to triggers!|r"
+L["SetupGuideStep1Text"] = Colors.White .. "1. Navigate to your WoW AddOns folder:|r\n" .. Colors.iSP .. "   Interface\\AddOns\\|r\n\n" .. Colors.White .. "2. Create a new folder called:|r\n" .. Colors.iSP .. "   iSoundPlayer_Sounds|r\n" .. Colors.Gray .. "   (This standalone folder is not managed by CurseForge)|r\n\n" .. Colors.White .. "3. Place your MP3 or OGG files in that folder|r\n\n" .. Colors.White .. "4. Type |r" .. Colors.iSP .. "/reload|r " .. Colors.White .. "in chat (no restart needed)|r\n\n" .. Colors.iSP .. "Sample Sounds:|r " .. Colors.Gray .. "Find samples you like in the iSoundPlayer\\_Samples folder, copy them into iSoundPlayer_Sounds, then use their filename when registering sounds in-game. Test them before assigning to triggers!|r"
 L["SetupGuideStep2Header"] = Colors.iSP .. "Step 2: Register Your Sounds|r"
 L["SetupGuideStep2Text"] = Colors.White .. "1. Open Settings by typing |r" .. Colors.Yellow .. "/isp|r " .. Colors.White .. "or clicking the minimap icon|r\n\n" .. Colors.White .. "2. Go to the |r" .. Colors.iSP .. "Sound Files|r " .. Colors.White .. "tab|r\n\n" .. Colors.White .. "3. Enter a name for your sound and select the file from the dropdown|r\n\n" .. Colors.White .. "4. Click |r" .. Colors.Green .. "Register Sound|r " .. Colors.White .. "to add it to your library|r\n\n" .. Colors.White .. "5. Use the |r" .. Colors.Yellow .. "Test Sound|r " .. Colors.White .. "button to preview it|r"
 L["SetupGuideStep3Header"] = Colors.iSP .. "Step 3: Configure Triggers|r"

@@ -134,6 +134,39 @@ StaticPopupDialogs["ISP_RESET_SETTINGS"] = {
     preferredIndex = 3,
 }
 
+StaticPopupDialogs["ISP_RENAME_SOUND"] = {
+    text = L["RenameSoundPrompt"],
+    button1 = L["SaveName"],
+    button2 = L["Cancel"],
+    hasEditBox = true,
+    OnShow = function(self)
+        self.EditBox:SetText(iSP._renamingName or "")
+        self.EditBox:HighlightText()
+    end,
+    OnAccept = function(self)
+        local newName = self.EditBox:GetText()
+        local filename = iSP._renamingFile
+        if filename then
+            if not iSPSettings.SoundNames then iSPSettings.SoundNames = {} end
+            if newName == "" then
+                iSPSettings.SoundNames[filename] = nil
+            else
+                iSPSettings.SoundNames[filename] = newName
+            end
+            if iSP.UpdateSoundList then iSP.UpdateSoundList() end
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        local parent = self:GetParent()
+        StaticPopupDialogs["ISP_RENAME_SOUND"].OnAccept(parent)
+        parent:Hide()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
 -- ╭───────────────────────────────────────────────────────────────────────────────╮
 -- │                           Create Options Panel                                │
 -- ╰───────────────────────────────────────────────────────────────────────────────╯
@@ -734,6 +767,22 @@ function iSP:CreateOptionsPanel()
     soundNameBox:SetFontObject(GameFontHighlight)
     soundNameBox:SetMaxLetters(100)
 
+    y = y - 28
+
+    -- Display name input (optional)
+    local displayNameLabel = soundsContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    displayNameLabel:SetPoint("TOPLEFT", soundsContent, "TOPLEFT", 25, y)
+    displayNameLabel:SetText(L["DisplayNameLabel"])
+
+    y = y - 20
+
+    local displayNameBox = CreateFrame("EditBox", nil, soundsContent, "InputBoxTemplate")
+    displayNameBox:SetSize(350, 22)
+    displayNameBox:SetPoint("TOPLEFT", soundsContent, "TOPLEFT", 25, y)
+    displayNameBox:SetAutoFocus(false)
+    displayNameBox:SetFontObject(GameFontHighlight)
+    displayNameBox:SetMaxLetters(50)
+
     y = y - 30
 
     -- Forward declare UpdateSoundList so buttons can reference it
@@ -764,8 +813,17 @@ function iSP:CreateOptionsPanel()
             end
 
             table.insert(iSPSettings.SoundFiles, fileName)
+
+            -- Save display name if provided
+            local displayName = displayNameBox:GetText()
+            if displayName and displayName ~= "" then
+                if not iSPSettings.SoundNames then iSPSettings.SoundNames = {} end
+                iSPSettings.SoundNames[fileName] = displayName
+            end
+
             print(string.format(L["SoundAdded"], fileName))
             soundNameBox:SetText("")
+            displayNameBox:SetText("")
             UpdateSoundList()
         end
     end)
@@ -789,7 +847,13 @@ function iSP:CreateOptionsPanel()
 
     y = y - 28
 
-    y = y - 8
+    -- Custom sounds folder note
+    local customNote
+    customNote, y = CreateInfoText(soundsContent,
+        L["CustomSoundsNote"],
+        y - 4, "GameFontDisableSmall")
+
+    y = y - 4
     _, y = CreateSectionHeader(soundsContent, L["RegisteredSounds"], y)
 
     -- Container for sound list items
@@ -831,10 +895,43 @@ function iSP:CreateOptionsPanel()
                 soundFrame:SetBackdropColor(0.08, 0.08, 0.1, 0.6)
                 soundFrame:SetBackdropBorderColor(0.3, 0.3, 0.4, 0.5)
 
-                -- Sound name text
+                -- Tooltip showing full filename on hover
+                soundFrame:EnableMouse(true)
+                soundFrame:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                    GameTooltip:AddLine(sound, 1, 1, 1)
+                    GameTooltip:Show()
+                end)
+                soundFrame:SetScript("OnLeave", function()
+                    GameTooltip:Hide()
+                end)
+
+                -- Sound name text (show custom name or truncated filename)
+                local displayName
+                if iSPSettings.SoundNames and iSPSettings.SoundNames[sound] and iSPSettings.SoundNames[sound] ~= "" then
+                    displayName = iSPSettings.SoundNames[sound]
+                else
+                    displayName = sound
+                    if sound:find("\\") then
+                        displayName = "...\\" .. sound:match("([^\\]+)$")
+                    end
+                end
                 local soundText = soundFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                 soundText:SetPoint("LEFT", soundFrame, "LEFT", 8, 0)
-                soundText:SetText(Colors.Green .. i .. ".|r " .. sound)
+                soundText:SetText(Colors.Green .. i .. ".|r " .. displayName)
+                soundText:SetWidth(200)
+                soundText:SetJustifyH("LEFT")
+
+                -- Rename button
+                local renameBtn = CreateFrame("Button", nil, soundFrame, "UIPanelButtonTemplate")
+                renameBtn:SetSize(24, 20)
+                renameBtn:SetPoint("LEFT", soundText, "RIGHT", 2, 0)
+                renameBtn:SetText(L["RenameBtn"])
+                renameBtn:SetScript("OnClick", function()
+                    iSP._renamingFile = sound
+                    iSP._renamingName = (iSPSettings.SoundNames and iSPSettings.SoundNames[sound]) or ""
+                    StaticPopup_Show("ISP_RENAME_SOUND")
+                end)
 
                 -- Duration input (seconds for test playback)
                 if not iSPSettings.SoundDurations then iSPSettings.SoundDurations = {} end
@@ -905,6 +1002,9 @@ function iSP:CreateOptionsPanel()
                     end
                     if iSPSettings.SoundDurations then
                         iSPSettings.SoundDurations[sound] = nil
+                    end
+                    if iSPSettings.SoundNames then
+                        iSPSettings.SoundNames[sound] = nil
                     end
                     -- Refresh list
                     UpdateSoundList()
@@ -1065,7 +1165,11 @@ function iSP:CreateOptionsPanel()
                     dropdown:SetText(L["None"])
                 else
                     iSPSettings.Triggers[triggerID].sound = soundName
-                    dropdown:SetText(soundName)
+                    local dropdownDisplay = soundName
+                    if iSPSettings.SoundNames and iSPSettings.SoundNames[soundName] and iSPSettings.SoundNames[soundName] ~= "" then
+                        dropdownDisplay = iSPSettings.SoundNames[soundName]
+                    end
+                    dropdown:SetText(dropdownDisplay)
                 end
             end
             soundPicker:Hide()
@@ -1091,7 +1195,11 @@ function iSP:CreateOptionsPanel()
         end
         if iSPSettings.SoundFiles then
             for _, sound in ipairs(iSPSettings.SoundFiles) do
-                if filter == "" or string.find(sound:lower(), filter, 1, true) then
+                local nameMatch = false
+                if iSPSettings.SoundNames and iSPSettings.SoundNames[sound] then
+                    nameMatch = string.find(iSPSettings.SoundNames[sound]:lower(), filter, 1, true)
+                end
+                if filter == "" or string.find(sound:lower(), filter, 1, true) or nameMatch then
                     table.insert(filteredSounds, sound)
                 end
             end
@@ -1113,7 +1221,11 @@ function iSP:CreateOptionsPanel()
             if soundName == "" then
                 row.label:SetText(Colors.Gray .. L["None"])
             else
-                row.label:SetText(soundName)
+                local pickerDisplayName = soundName
+                if iSPSettings.SoundNames and iSPSettings.SoundNames[soundName] and iSPSettings.SoundNames[soundName] ~= "" then
+                    pickerDisplayName = iSPSettings.SoundNames[soundName]
+                end
+                row.label:SetText(pickerDisplayName)
             end
 
             -- Show checkmark on currently selected sound
@@ -1262,7 +1374,11 @@ function iSP:CreateOptionsPanel()
         if not currentSound or currentSound == "" then
             soundDropdown:SetText(L["None"])
         else
-            soundDropdown:SetText(currentSound)
+            local triggerDisplayName = currentSound
+            if iSPSettings.SoundNames and iSPSettings.SoundNames[currentSound] and iSPSettings.SoundNames[currentSound] ~= "" then
+                triggerDisplayName = iSPSettings.SoundNames[currentSound]
+            end
+            soundDropdown:SetText(triggerDisplayName)
         end
 
         soundDropdown:SetScript("OnClick", function(self)
@@ -1291,6 +1407,7 @@ function iSP:CreateOptionsPanel()
         -- Announce dropdown button
         local announceOptions = {
             { value = "",              label = L["AnnounceOff"] or "Off" },
+            { value = "SELF",          label = L["AnnounceSelf"] or "Self" },
             { value = "GENERAL",       label = L["AnnounceGeneral"] or "General" },
             { value = "PARTY",         label = L["AnnounceParty"] or "Party" },
             { value = "RAID",          label = L["AnnounceRaid"] or "Raid" },
@@ -1526,7 +1643,11 @@ function iSP:CreateOptionsPanel()
                                     if not cs or cs == "" then
                                         tf.soundDropdown:SetText(L["None"])
                                     else
-                                        tf.soundDropdown:SetText(cs)
+                                        local renderDisplayName = cs
+                                        if iSPSettings.SoundNames and iSPSettings.SoundNames[cs] and iSPSettings.SoundNames[cs] ~= "" then
+                                            renderDisplayName = iSPSettings.SoundNames[cs]
+                                        end
+                                        tf.soundDropdown:SetText(renderDisplayName)
                                     end
                                 end
 

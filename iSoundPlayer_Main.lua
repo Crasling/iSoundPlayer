@@ -36,6 +36,7 @@ iSP.Author = Author
 iSP.CurrentRealm = GetRealmName()
 iSP.AddonPath = "Interface\\Addons\\iSoundPlayer\\"
 iSP.SoundsPath = iSP.AddonPath .. "sounds\\"
+iSP.CustomSoundsPath = "Interface\\AddOns\\iSoundPlayer_Sounds\\"
 
 -- Game version info
 iSP.GameVersion, iSP.GameBuild, iSP.GameBuildDate, iSP.GameTocVersion = GetBuildInfo()
@@ -104,6 +105,7 @@ iSP.SettingsDefault = {
     -- Sound
     SoundFiles = {},
     SoundDurations = {},  -- Per-sound test duration in seconds (keyed by filename)
+    SoundNames = {},      -- Custom display names for sounds (keyed by filename)
 
     -- Triggers
     Triggers = {
@@ -275,6 +277,10 @@ function iSP:InitializeSettings()
         iSPSettings.SoundFiles = {}
     end
 
+    if not iSPSettings.SoundNames then
+        iSPSettings.SoundNames = {}
+    end
+
     -- Auto-fill defaults for any triggers in TriggerMeta not yet in saved settings
     -- Handles upgrades from older versions that didn't have new triggers
     if iSP.TriggerMeta then
@@ -428,8 +434,11 @@ function iSP:PlaySound(fileName, options)
     local fadeIn = options.fadeIn or false
     local fadeOut = options.fadeOut or false
 
-    local soundPath = iSP.SoundsPath .. fileName
     local soundID = fileName .. "_" .. time()
+
+    -- Try custom sounds folder first (survives CurseForge updates),
+    -- then fall back to bundled sounds folder
+    local soundPath = iSP.CustomSoundsPath .. fileName
 
     if iSPSettings.DebugMode then
         print(string.format(L["SoundPlaying"], soundPath))
@@ -534,6 +543,16 @@ function iSP:PlaySound(fileName, options)
         end
         local vol = iSPSettings.iSPVolume or 100
         local success, soundHandle = PlayWithVolume(soundPath, channel)
+
+        -- If custom path failed, fall back to bundled sounds folder
+        if not success then
+            local bundledPath = iSP.SoundsPath .. fileName
+            if bundledPath ~= soundPath then
+                Debug("Custom path failed, trying bundled: " .. bundledPath, 3)
+                soundPath = bundledPath
+                success, soundHandle = PlayWithVolume(soundPath, channel)
+            end
+        end
 
         if not success and iSPSettings.DebugMode then
             print(string.format(L["SoundFailed"], soundPath))
@@ -720,6 +739,10 @@ function iSP:SendAnnouncement(triggerID, channel)
         if IsInGuild() then
             chatType = "GUILD"
         end
+    elseif channel == "SELF" then
+        print(L["PrintPrefix"] .. message)
+        Debug(string.format("Announcement printed to self: %s", message), 3)
+        return
     end
 
     if chatType then
@@ -1117,6 +1140,19 @@ function iSP:OnAddonLoaded()
     -- Delayed loaded message (like iNIF/iWR)
     C_Timer.After(2, function()
         print(L["PrintPrefix"] .. Colors.iSP .. "iSoundPlayer " .. Colors.Reset .. gameName .. Colors.Green .. " v" .. iSP.Version .. Colors.Reset .. " loaded!")
+
+        -- Welcome message (once per version)
+        if iSPSettings.WelcomeMessage ~= iSP.Version then
+            local playerName = UnitName("player")
+            local _, class = UnitClass("player")
+            local classColor = "|cFFFFFFFF"
+            if class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then
+                local c = RAID_CLASS_COLORS[class]
+                classColor = string.format("|cFF%02x%02x%02x", c.r * 255, c.g * 255, c.b * 255)
+            end
+            print(L["WelcomeStart"] .. classColor .. playerName .. L["WelcomeEnd"])
+            iSPSettings.WelcomeMessage = iSP.Version
+        end
     end)
 end
 

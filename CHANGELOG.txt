@@ -17,6 +17,35 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.4.0 - Named Sounds, Self Announce & Companion Folder
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- Named Sounds: give registered sounds a custom display name
+- Display name shown in sound list, sound picker, and trigger dropdowns
+- Rename button ("Aa") on each registered sound row
+- Display name input field when adding a new sound
+- Sound picker search now matches both filename and custom name
+- "Self" announce channel: prints trigger announcements to your own chat only
+- Companion Sounds folder: sounds stored in a separate iSoundPlayer_Sounds folder
+- Companion folder survives CurseForge updates (not inside the addon folder)
+- Sound fallback: tries companion folder first, then bundled sounds folder
+
+[UPDATED]
+- Setup Guide updated to reference creating the standalone companion folder
+- Sound tooltip no longer mentions bundled sounds folder
+- Long sound filenames are now truncated in the registered sounds list
+
+[FIXED]
+- Fixed StaticPopup EditBox crash on Classic TBC (EditBox casing)
+
+ Alpha Build History
+ ~~~~~~~~~~~~~~~~~~~
+  0.3.9.1  - Self announce channel, EditBox casing fix
+  0.3.8.1  - Named sounds, setup guide update, sound display truncation
+  0.3.7.1  - Companion sounds folder, custom sounds path, sound fallback
+
+═══════════════════════════════════════════════════════════
 Version 0.3.7 - TBC Icon Compatibility
 ═══════════════════════════════════════════════════════════
 
