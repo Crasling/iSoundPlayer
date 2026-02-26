@@ -1190,6 +1190,10 @@ function iSP:CreateMinimapButton()
                 iSP:StopAllSounds()
                 print(L["AllSoundsStopped"])
             elseif button == "LeftButton" then
+                if iSP.State.InCombat then
+                    print(L["InCombat"])
+                    return
+                end
                 -- Show setup guide if available, otherwise show settings
                 if iSP.ShowSetupGuide then
                     iSP:ShowSetupGuide()

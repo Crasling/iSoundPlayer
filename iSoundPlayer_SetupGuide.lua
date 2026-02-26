@@ -43,6 +43,19 @@ function iSP:CreateSetupGuide()
         tinsert(UISpecialFrames, "iSPSetupGuide")
     end
 
+    -- Close on combat — register/unregister only while visible
+    setupGuideFrame:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_DISABLED" then
+            self:Hide()
+        end
+    end)
+    setupGuideFrame:HookScript("OnShow", function(self)
+        self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    end)
+    setupGuideFrame:HookScript("OnHide", function(self)
+        self:UnregisterEvent("PLAYER_REGEN_DISABLED")
+    end)
+
     -- Backdrop
     setupGuideFrame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",

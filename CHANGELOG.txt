@@ -38,9 +38,12 @@ Version 0.4.0 - Named Sounds, Self Announce & Companion Folder
 
 [FIXED]
 - Fixed StaticPopup EditBox crash on Classic TBC (EditBox casing)
+- Fixed Setup Guide not auto-hiding when entering combat
+- Minimap left-click now blocked during combat
 
  Alpha Build History
  ~~~~~~~~~~~~~~~~~~~
+  0.4.0.1  - Minimap left-click blocked in combat, Setup Guide combat close fix
   0.3.9.1  - Self announce channel, EditBox casing fix
   0.3.8.1  - Named sounds, setup guide update, sound display truncation
   0.3.7.1  - Companion sounds folder, custom sounds path, sound fallback
