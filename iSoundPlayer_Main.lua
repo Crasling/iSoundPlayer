@@ -281,6 +281,10 @@ function iSP:InitializeSettings()
         iSPSettings.SoundNames = {}
     end
 
+    if not iSPSettings.CooldownAlerts then
+        iSPSettings.CooldownAlerts = {}
+    end
+
     -- Auto-fill defaults for any triggers in TriggerMeta not yet in saved settings
     -- Handles upgrades from older versions that didn't have new triggers
     if iSP.TriggerMeta then
@@ -331,6 +335,7 @@ end
 iSP.ActiveSounds = {}
 iSP.TriggerLastFired = {}  -- Cooldown tracking: triggerID -> GetTime()
 iSP.EventToTriggers = {}   -- Lookup: WoW event -> {triggerID, ...}
+iSP.CooldownStates = {}    -- Spell cooldown alerts: spellName -> true if on cooldown
 
 -- Saved original volumes before any iSP boost (restored when last sound stops)
 iSP.SavedVolumes = nil
@@ -894,6 +899,12 @@ local function OnEvent(self, event, ...)
         return
     end
 
+    -- ── Cooldown alerts ──
+    if event == "SPELL_UPDATE_COOLDOWN" then
+        iSP:OnSpellCooldownUpdate()
+        return
+    end
+
     -- ── Data-driven dispatch for all other events ──
     local triggers = iSP.EventToTriggers[event]
     if triggers then
@@ -1109,6 +1120,133 @@ function iSP:RegisterTriggerEvents()
 end
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                            Cooldown Alerts                                    │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+
+function iSP:RegisterCooldownAlerts()
+    if not iSPSettings.CooldownAlerts then return end
+    local hasEnabled = false
+    for spellName, config in pairs(iSPSettings.CooldownAlerts) do
+        if config.enabled then
+            hasEnabled = true
+            Debug("Cooldown alert registered: " .. spellName, 3)
+        end
+    end
+    if hasEnabled then
+        eventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+        Debug("SPELL_UPDATE_COOLDOWN event registered.", 3)
+    else
+        Debug("No enabled cooldown alerts found.", 3)
+    end
+end
+
+iSP.CooldownAlertQueue = {}       -- Queue of spell names waiting to play
+iSP.CooldownAlertPlaying = false  -- True while a cooldown alert sound is active
+iSP.CooldownPollCounts = {}       -- Poll iteration count per spell (safety limit)
+local COOLDOWN_MAX_POLLS = 30     -- Max polls before giving up (~15 seconds)
+local COOLDOWN_STAGGER_DELAY = 0.8 -- Seconds between queued alert sounds
+
+function iSP:CheckCooldownReady(spellName)
+    local config = iSPSettings.CooldownAlerts and iSPSettings.CooldownAlerts[spellName]
+    if not config or not config.enabled or not config.sound or config.sound == "" then
+        Debug("CheckCooldownReady: " .. spellName .. " — config missing or disabled, aborting.", 2)
+        self.CooldownStates[spellName] = nil
+        self.CooldownPollCounts[spellName] = nil
+        return
+    end
+
+    -- Safety: max poll limit to prevent infinite polling
+    self.CooldownPollCounts[spellName] = (self.CooldownPollCounts[spellName] or 0) + 1
+    if self.CooldownPollCounts[spellName] > COOLDOWN_MAX_POLLS then
+        Debug("CheckCooldownReady: " .. spellName .. " — max polls reached (" .. COOLDOWN_MAX_POLLS .. "), giving up.", 2)
+        self.CooldownStates[spellName] = nil
+        self.CooldownPollCounts[spellName] = nil
+        return
+    end
+
+    local start, duration, enabled = GetSpellCooldown(spellName)
+    Debug("CheckCooldownReady: " .. spellName .. " — start=" .. tostring(start) .. " duration=" .. tostring(duration) .. " enabled=" .. tostring(enabled) .. " (poll " .. self.CooldownPollCounts[spellName] .. "/" .. COOLDOWN_MAX_POLLS .. ")", 3)
+    if start and start > 0 and duration and duration > 1.5 then
+        -- Still on cooldown — poll again in 0.5s
+        Debug("CheckCooldownReady: " .. spellName .. " still on cooldown, polling again in 0.5s.", 3)
+        C_Timer.After(0.5, function() iSP:CheckCooldownReady(spellName) end)
+    else
+        -- Cooldown finished — queue alert
+        Debug("CheckCooldownReady: " .. spellName .. " is READY — queuing alert.", 3)
+        self.CooldownStates[spellName] = nil
+        self.CooldownPollCounts[spellName] = nil
+        self:QueueCooldownAlert(spellName)
+    end
+end
+
+function iSP:QueueCooldownAlert(spellName)
+    -- Add to queue (avoid duplicates)
+    for _, name in ipairs(self.CooldownAlertQueue) do
+        if name == spellName then
+            Debug("QueueCooldownAlert: " .. spellName .. " already in queue, skipping.", 3)
+            return
+        end
+    end
+    table.insert(self.CooldownAlertQueue, spellName)
+    Debug("QueueCooldownAlert: " .. spellName .. " added to queue (queue size: " .. #self.CooldownAlertQueue .. ").", 3)
+
+    -- If nothing is currently playing, start processing
+    if not self.CooldownAlertPlaying then
+        self:ProcessCooldownAlertQueue()
+    end
+end
+
+function iSP:ProcessCooldownAlertQueue()
+    if #self.CooldownAlertQueue == 0 then
+        self.CooldownAlertPlaying = false
+        Debug("ProcessCooldownAlertQueue: Queue empty, done.", 3)
+        return
+    end
+
+    self.CooldownAlertPlaying = true
+    local spellName = table.remove(self.CooldownAlertQueue, 1)
+    local config = iSPSettings.CooldownAlerts and iSPSettings.CooldownAlerts[spellName]
+
+    if not config or not config.sound or config.sound == "" then
+        Debug("ProcessCooldownAlertQueue: " .. spellName .. " — no sound configured, skipping.", 2)
+        self:ProcessCooldownAlertQueue()
+        return
+    end
+
+    Debug("ProcessCooldownAlertQueue: Playing alert for " .. spellName .. " — sound: " .. config.sound, 3)
+    local dur = (iSPSettings.SoundDurations and iSPSettings.SoundDurations[config.sound]) or 3
+    self:PlaySound(config.sound, { duration = dur })
+    if iSPSettings.ShowNotifications then
+        print(iSP.Colors.iSP .. "[iSP]: |r" .. spellName .. " is ready!")
+    end
+
+    -- Process next queued alert after a stagger delay
+    local remaining = #self.CooldownAlertQueue
+    if remaining > 0 then
+        Debug("ProcessCooldownAlertQueue: " .. remaining .. " more in queue, next in " .. COOLDOWN_STAGGER_DELAY .. "s.", 3)
+        C_Timer.After(COOLDOWN_STAGGER_DELAY, function() iSP:ProcessCooldownAlertQueue() end)
+    else
+        self.CooldownAlertPlaying = false
+    end
+end
+
+function iSP:OnSpellCooldownUpdate()
+    if not iSPSettings.CooldownAlerts then return end
+    for spellName, config in pairs(iSPSettings.CooldownAlerts) do
+        if config.enabled and config.sound and config.sound ~= "" then
+            local start, duration, enabled = GetSpellCooldown(spellName)
+            if start and start > 0 and duration and duration > 1.5 and not self.CooldownStates[spellName] then
+                -- Cooldown just started — begin polling
+                Debug("Cooldown detected: " .. spellName .. " — duration=" .. tostring(duration) .. "s, polling in " .. tostring(duration - 0.2) .. "s.", 3)
+                self.CooldownStates[spellName] = true
+                self.CooldownPollCounts[spellName] = 0
+                C_Timer.After(duration - 0.2, function() iSP:CheckCooldownReady(spellName) end)
+            end
+        end
+    end
+end
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                              Addon Lifecycle Events                            │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
 
@@ -1118,6 +1256,9 @@ function iSP:OnAddonLoaded()
 
     -- Register trigger events
     self:RegisterTriggerEvents()
+
+    -- Register cooldown alerts
+    self:RegisterCooldownAlerts()
 
     -- Determine game version name based on TOC
     local gameName = "Unknown"

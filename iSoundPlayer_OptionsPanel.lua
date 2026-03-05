@@ -298,13 +298,14 @@ function iSP:CreateOptionsPanel()
     local generalContainer, generalContent = CreateTabContent()
     local soundsContainer, soundsContent = CreateTabContent()
     local triggersContainer, triggersContent = CreateTabContent()
+    local cooldownContainer, cooldownContent = CreateTabContent()
     local aboutContainer, aboutContent = CreateTabContent()
 
     -- ALWAYS create addon tabs (addon detection happens on window show)
     local iNIFContainer, iNIFContent = CreateTabContent()
     local iWRContainer, iWRContent = CreateTabContent()
 
-    local tabContents = {generalContainer, soundsContainer, triggersContainer, aboutContainer, iNIFContainer, iWRContainer}
+    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, aboutContainer, iNIFContainer, iWRContainer}
     local sidebarButtons = {}
     local iNIFTabButton = nil  -- Reference to iNIF tab button
     local iWRTabButton = nil   -- Reference to iWR tab button
@@ -332,10 +333,11 @@ function iSP:CreateOptionsPanel()
         {type = "tab", label = L["Tab1General"], index = 1},
         {type = "tab", label = L["Tab2Sounds"], index = 2},
         {type = "tab", label = L["Tab3Triggers"], index = 3},
-        {type = "tab", label = L["Tab4About"], index = 4},
+        {type = "tab", label = "Cooldown Alerts", index = 4},
+        {type = "tab", label = L["Tab4About"], index = 5},
         {type = "header", label = L["SidebarHeaderOtherAddons"]},
-        {type = "tab", label = L["TabINIFPromo"], index = 5},
-        {type = "tab", label = L["TabIWRPromo"], index = 6},
+        {type = "tab", label = L["TabINIFPromo"], index = 6},
+        {type = "tab", label = L["TabIWRPromo"], index = 7},
     }
 
     local sidebarY = -6
@@ -373,9 +375,9 @@ function iSP:CreateOptionsPanel()
             table.insert(sidebarButtons, btn)
 
             -- Save references to addon tab buttons
-            if item.index == 5 then
+            if item.index == 6 then
                 iNIFTabButton = btn
-            elseif item.index == 6 then
+            elseif item.index == 7 then
                 iWRTabButton = btn
             end
 
@@ -1096,6 +1098,7 @@ function iSP:CreateOptionsPanel()
     -- Picker state
     soundPicker.activeTriggerID = nil
     soundPicker.activeDropdown = nil
+    soundPicker.onSelectCallback = nil  -- Optional callback for non-trigger sound selection
 
     -- Search box inside picker
     local pickerSearch = CreateFrame("EditBox", nil, soundPicker, "InputBoxTemplate")
@@ -1156,20 +1159,25 @@ function iSP:CreateOptionsPanel()
         row.label = label
 
         row:SetScript("OnClick", function(self)
-            local triggerID = soundPicker.activeTriggerID
-            local dropdown = soundPicker.activeDropdown
-            if triggerID and dropdown then
-                local soundName = self.soundName
-                if soundName == "" then
-                    iSPSettings.Triggers[triggerID].sound = ""
-                    dropdown:SetText(L["None"])
-                else
-                    iSPSettings.Triggers[triggerID].sound = soundName
-                    local dropdownDisplay = soundName
-                    if iSPSettings.SoundNames and iSPSettings.SoundNames[soundName] and iSPSettings.SoundNames[soundName] ~= "" then
-                        dropdownDisplay = iSPSettings.SoundNames[soundName]
+            local soundName = self.soundName
+            -- Use callback if set (cooldown alerts), otherwise use trigger path
+            if soundPicker.onSelectCallback then
+                soundPicker.onSelectCallback(soundName)
+            else
+                local triggerID = soundPicker.activeTriggerID
+                local dropdown = soundPicker.activeDropdown
+                if triggerID and dropdown then
+                    if soundName == "" then
+                        iSPSettings.Triggers[triggerID].sound = ""
+                        dropdown:SetText(L["None"])
+                    else
+                        iSPSettings.Triggers[triggerID].sound = soundName
+                        local dropdownDisplay = soundName
+                        if iSPSettings.SoundNames and iSPSettings.SoundNames[soundName] and iSPSettings.SoundNames[soundName] ~= "" then
+                            dropdownDisplay = iSPSettings.SoundNames[soundName]
+                        end
+                        dropdown:SetText(dropdownDisplay)
                     end
-                    dropdown:SetText(dropdownDisplay)
                 end
             end
             soundPicker:Hide()
@@ -1180,11 +1188,11 @@ function iSP:CreateOptionsPanel()
 
     local function RefreshSoundPicker()
         local triggerID = soundPicker.activeTriggerID
-        if not triggerID then return end
+        if not triggerID and not soundPicker.onSelectCallback then return end
 
         local filter = pickerSearch:GetText():lower()
-        local currentSound = ""
-        if iSPSettings.Triggers[triggerID] then
+        local currentSound = soundPicker.currentSound or ""
+        if triggerID and iSPSettings.Triggers[triggerID] then
             currentSound = iSPSettings.Triggers[triggerID].sound or ""
         end
 
@@ -1281,6 +1289,8 @@ function iSP:CreateOptionsPanel()
 
         soundPicker.activeTriggerID = triggerID
         soundPicker.activeDropdown = dropdown
+        soundPicker.onSelectCallback = nil
+        soundPicker.currentSound = nil
 
         -- Position below the dropdown button
         soundPicker:ClearAllPoints()
@@ -1697,6 +1707,229 @@ function iSP:CreateOptionsPanel()
     RenderTriggers()
 
     -- ╭───────────────────────────────────────────────────────────────╮
+    -- │                   Cooldown Alerts Tab Content                  │
+    -- ╰───────────────────────────────────────────────────────────────╯
+    y = -10
+
+    _, y = CreateSectionHeader(cooldownContent, "Cooldown Alerts", y)
+    _, y = CreateInfoText(cooldownContent, "Play a sound when a spell or ability comes off cooldown.\nType the exact spell name as it appears in your spellbook.", y)
+
+    y = y - 6
+
+    -- Add spell input row
+    local cdInputRow = CreateFrame("Frame", nil, cooldownContent)
+    cdInputRow:SetSize(520, 30)
+    cdInputRow:SetPoint("TOPLEFT", cooldownContent, "TOPLEFT", 14, y)
+
+    local cdInput = CreateFrame("EditBox", nil, cdInputRow, "InputBoxTemplate")
+    cdInput:SetSize(280, 24)
+    cdInput:SetPoint("LEFT", cdInputRow, "LEFT", 0, 0)
+    cdInput:SetAutoFocus(false)
+    cdInput:SetFontObject(ChatFontNormal)
+
+    local cdInputPlaceholder = cdInput:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    cdInputPlaceholder:SetPoint("LEFT", cdInput, "LEFT", 6, 0)
+    cdInputPlaceholder:SetText("Spell name (e.g. Prayer of Mending)")
+    cdInput:SetScript("OnTextChanged", function(self)
+        local text = self:GetText()
+        cdInputPlaceholder:SetShown(text == "")
+    end)
+
+    local cdAddBtn = CreateFrame("Button", nil, cdInputRow, "UIPanelButtonTemplate")
+    cdAddBtn:SetSize(60, 24)
+    cdAddBtn:SetPoint("LEFT", cdInput, "RIGHT", 8, 0)
+    cdAddBtn:SetText("Add")
+
+    y = y - 36
+
+    -- Spell list container
+    local cdListContainer = CreateFrame("Frame", nil, cooldownContent)
+    cdListContainer:SetPoint("TOPLEFT", cooldownContent, "TOPLEFT", 14, y)
+    cdListContainer:SetPoint("TOPRIGHT", cooldownContent, "TOPRIGHT", -14, y)
+    cdListContainer:SetHeight(400)
+
+    local cdSpellFrames = {}
+
+    local function GetSoundDisplayName(soundFile)
+        if not soundFile or soundFile == "" then return "None" end
+        if iSPSettings.SoundNames and iSPSettings.SoundNames[soundFile] and iSPSettings.SoundNames[soundFile] ~= "" then
+            return iSPSettings.SoundNames[soundFile]
+        end
+        return soundFile
+    end
+
+    local function RefreshCooldownList()
+        -- Hide existing frames
+        for _, frame in ipairs(cdSpellFrames) do
+            frame:Hide()
+        end
+
+        if not iSPSettings.CooldownAlerts then return end
+
+        -- Sort spell names alphabetically
+        local sortedSpells = {}
+        for spellName in pairs(iSPSettings.CooldownAlerts) do
+            table.insert(sortedSpells, spellName)
+        end
+        table.sort(sortedSpells)
+
+        local listY = 0
+        for i, spellName in ipairs(sortedSpells) do
+            local config = iSPSettings.CooldownAlerts[spellName]
+
+            -- Reuse or create frame
+            local sf = cdSpellFrames[i]
+            if not sf then
+                sf = CreateFrame("Frame", nil, cdListContainer, BACKDROP_TEMPLATE)
+                sf:SetHeight(56)
+                sf:SetBackdrop({
+                    bgFile = "Interface\\BUTTONS\\WHITE8X8",
+                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                    edgeSize = 8,
+                    insets = {left = 2, right = 2, top = 2, bottom = 2},
+                })
+                sf:SetBackdropColor(0.08, 0.08, 0.1, 0.8)
+                sf:SetBackdropBorderColor(0.4, 0.4, 0.5, 0.6)
+
+                -- Enable checkbox
+                local cb = CreateFrame("CheckButton", nil, sf, CHECKBOX_TEMPLATE)
+                cb:SetPoint("TOPLEFT", sf, "TOPLEFT", 8, -6)
+                if not cb.Text then
+                    cb.Text = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    cb.Text:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+                end
+                sf.enableCB = cb
+
+                -- Spell name label
+                local nameLabel = sf:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                nameLabel:SetPoint("LEFT", cb.Text, "RIGHT", 8, 1)
+                sf.nameLabel = nameLabel
+
+                -- Sound label (anchored with enough left padding)
+                local soundLabel = sf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                soundLabel:SetPoint("TOPLEFT", sf, "TOPLEFT", 12, -32)
+                soundLabel:SetText("Sound:")
+                sf.soundLabel = soundLabel
+
+                -- Sound dropdown button (anchored to the right of the label)
+                local soundBtn = CreateFrame("Button", nil, sf, "UIPanelButtonTemplate")
+                soundBtn:SetSize(200, 22)
+                soundBtn:SetPoint("LEFT", soundLabel, "RIGHT", 6, 0)
+                sf.soundBtn = soundBtn
+
+                -- Test button
+                local testBtn = CreateFrame("Button", nil, sf, "UIPanelButtonTemplate")
+                testBtn:SetSize(50, 22)
+                testBtn:SetPoint("LEFT", soundBtn, "RIGHT", 5, 0)
+                testBtn:SetText("Test")
+                sf.testBtn = testBtn
+
+                -- Remove button
+                local removeBtn = CreateFrame("Button", nil, sf, "UIPanelButtonTemplate")
+                removeBtn:SetSize(60, 22)
+                removeBtn:SetPoint("LEFT", testBtn, "RIGHT", 5, 0)
+                removeBtn:SetText("Remove")
+                sf.removeBtn = removeBtn
+
+                cdSpellFrames[i] = sf
+            end
+
+            sf:ClearAllPoints()
+            sf:SetPoint("TOPLEFT", cdListContainer, "TOPLEFT", 0, listY)
+            sf:SetPoint("RIGHT", cdListContainer, "RIGHT", 0, 0)
+            sf:Show()
+
+            -- Configure enable checkbox
+            sf.enableCB:SetChecked(config.enabled)
+            sf.enableCB.Text:SetText("Enabled")
+            sf.enableCB:SetScript("OnClick", function(self)
+                iSPSettings.CooldownAlerts[spellName].enabled = self:GetChecked() and true or false
+                -- Re-register events
+                iSP:RegisterCooldownAlerts()
+            end)
+
+            -- Spell name
+            sf.nameLabel:SetText(Colors.iSP .. spellName)
+
+            -- Sound button
+            sf.soundBtn:SetText(GetSoundDisplayName(config.sound))
+            sf.soundBtn:SetScript("OnClick", function(self)
+                if not iSPSettings.SoundFiles or #iSPSettings.SoundFiles == 0 then
+                    print(L["DebugWarning"] .. L["NoSoundsWarning"])
+                    return
+                end
+
+                soundPicker.activeTriggerID = nil
+                soundPicker.activeDropdown = nil
+                soundPicker.currentSound = config.sound or ""
+                soundPicker.onSelectCallback = function(soundName)
+                    if soundName == "" then
+                        iSPSettings.CooldownAlerts[spellName].sound = ""
+                    else
+                        iSPSettings.CooldownAlerts[spellName].sound = soundName
+                    end
+                    sf.soundBtn:SetText(GetSoundDisplayName(soundName))
+                end
+
+                soundPicker:ClearAllPoints()
+                soundPicker:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
+                pickerSearch:SetText("")
+                pickerPlaceholder:Show()
+                soundPicker:Show()
+                RefreshSoundPicker()
+                pickerSearch:SetFocus()
+            end)
+
+            -- Test button
+            sf.testBtn:SetScript("OnClick", function()
+                if config.sound and config.sound ~= "" then
+                    iSP:TestSound(config.sound)
+                else
+                    print(L["DebugError"] .. (L["NoSoundSelected"] or "No sound selected."))
+                end
+            end)
+
+            -- Remove button
+            sf.removeBtn:SetScript("OnClick", function()
+                iSPSettings.CooldownAlerts[spellName] = nil
+                iSP.CooldownStates[spellName] = nil
+                RefreshCooldownList()
+                iSP:RegisterCooldownAlerts()
+            end)
+
+            listY = listY - 62
+        end
+
+        cdListContainer:SetHeight(math.max(math.abs(listY), 1))
+    end
+
+    -- Add button click handler
+    cdAddBtn:SetScript("OnClick", function()
+        local spellName = cdInput:GetText():match("^%s*(.-)%s*$")  -- trim
+        if not spellName or spellName == "" then return end
+
+        if iSPSettings.CooldownAlerts[spellName] then
+            print(Colors.iSP .. "[iSP]: |r" .. spellName .. " is already tracked.")
+            return
+        end
+
+        iSPSettings.CooldownAlerts[spellName] = {
+            enabled = true,
+            sound = "",
+        }
+        cdInput:SetText("")
+        RefreshCooldownList()
+        iSP:RegisterCooldownAlerts()
+    end)
+
+    cdInput:SetScript("OnEnterPressed", function(self)
+        cdAddBtn:Click()
+    end)
+
+    -- Initial render
+    RefreshCooldownList()
+
+    -- ╭───────────────────────────────────────────────────────────────╮
     -- │                       About Tab Content                       │
     -- ╰───────────────────────────────────────────────────────────────╯
     y = -10
@@ -1777,7 +2010,7 @@ function iSP:CreateOptionsPanel()
         y, "DebugMode")
     checkboxRefs.DebugMode = cbDebug
 
-    scrollChildren[4]:SetHeight(math.abs(y) + 20)
+    scrollChildren[5]:SetHeight(math.abs(y) + 20)
 
     -- ╭───────────────────────────────────────────────────────────────╮
     -- │                   iNIF Tab Content (Static)                   │
@@ -1830,7 +2063,7 @@ function iSP:CreateOptionsPanel()
         L["INIFPromoLink"],
         y, "GameFontDisableSmall")
 
-    scrollChildren[5]:SetHeight(200)  -- Static height
+    scrollChildren[6]:SetHeight(200)  -- Static height
 
     -- ╭───────────────────────────────────────────────────────────────╮
     -- │                   iWR Tab Content (Static)                    │
@@ -1882,7 +2115,7 @@ function iSP:CreateOptionsPanel()
         L["IWRPromoLink"],
         y, "GameFontDisableSmall")
 
-    scrollChildren[6]:SetHeight(200)  -- Static height
+    scrollChildren[7]:SetHeight(200)  -- Static height
 
     -- ╭───────────────────────────────────────────────────────────────╮
     -- │                      Show First Tab                           │

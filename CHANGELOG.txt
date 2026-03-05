@@ -17,6 +17,27 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.5.0 - Cooldown Alerts
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- Cooldown Alerts: play a custom sound when a spell or ability comes off cooldown
+- New "Cooldown Alerts" tab in settings panel
+- Add spells by name, assign a sound, enable/disable individually
+- Test button to preview the alert sound
+- Notification message when a spell comes off cooldown
+
+[TECHNICAL]
+- Polling-based cooldown detection (reliable on Classic TBC where events don't fire on expiry)
+- Queued alert system: simultaneous cooldowns play sounds sequentially with stagger delay
+- Duplicate queue prevention and max poll safety limit
+- Sound picker adapted with callback pattern for non-trigger usage
+
+ Alpha Build History
+ ~~~~~~~~~~~~~~~~~~~
+  0.4.1.1 - Cooldown Alerts: play a sound when spells come off cooldown
+
+═══════════════════════════════════════════════════════════
 Version 0.4.0 - Named Sounds, Self Announce & Companion Folder
 ═══════════════════════════════════════════════════════════
 
