@@ -13,6 +13,7 @@
 
 local addonName, iSP = ...
 local L = iSP.L
+local print = function(...) iSP:PrintToChat(...) end
 
 -- Retail 10.0+ removed InterfaceOptionsCheckButtonTemplate, use UICheckButtonTemplate instead
 local CHECKBOX_TEMPLATE = InterfaceOptionsCheckButtonTemplate and "InterfaceOptionsCheckButtonTemplate" or "UICheckButtonTemplate"
@@ -304,11 +305,13 @@ function iSP:CreateOptionsPanel()
     -- ALWAYS create addon tabs (addon detection happens on window show)
     local iNIFContainer, iNIFContent = CreateTabContent()
     local iWRContainer, iWRContent = CreateTabContent()
+    local iCCContainer, iCCContent = CreateTabContent()
 
-    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, aboutContainer, iNIFContainer, iWRContainer}
+    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, aboutContainer, iNIFContainer, iWRContainer, iCCContainer}
     local sidebarButtons = {}
     local iNIFTabButton = nil  -- Reference to iNIF tab button
     local iWRTabButton = nil   -- Reference to iWR tab button
+    local iCCTabButton = nil   -- Reference to iCC tab button
     local activeIndex = 1
 
     local function ShowTab(index)
@@ -338,6 +341,7 @@ function iSP:CreateOptionsPanel()
         {type = "header", label = L["SidebarHeaderOtherAddons"]},
         {type = "tab", label = L["TabINIFPromo"], index = 6},
         {type = "tab", label = L["TabIWRPromo"], index = 7},
+        {type = "tab", label = L["TabICCPromo"], index = 8},
     }
 
     local sidebarY = -6
@@ -379,6 +383,8 @@ function iSP:CreateOptionsPanel()
                 iNIFTabButton = btn
             elseif item.index == 7 then
                 iWRTabButton = btn
+            elseif item.index == 8 then
+                iCCTabButton = btn
             end
 
             sidebarY = sidebarY - 28
@@ -735,6 +741,41 @@ function iSP:CreateOptionsPanel()
         function()
             StaticPopup_Show("ISP_RESET_SETTINGS")
         end)
+
+    -- Section: Chat Output
+    _, y = CreateSectionHeader(generalContent, L["SectionChatOutput"], y - 6)
+
+    local generalChatCb = CreateFrame("CheckButton", nil, generalContent, CHECKBOX_TEMPLATE)
+    generalChatCb:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 20, y)
+    if not generalChatCb.Text then
+        generalChatCb.Text = generalChatCb:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        generalChatCb.Text:SetPoint("LEFT", generalChatCb, "RIGHT", 4, 0)
+    end
+    generalChatCb.Text:SetText(Colors.Gray .. "General " .. L["ChatFrameAlwaysOn"] .. Colors.Reset)
+    generalChatCb:SetChecked(true)
+    generalChatCb:Disable()
+    y = y - 22
+
+    if not iSPSettings.ChatFrames then iSPSettings.ChatFrames = {} end
+    local skipTabs = { ["Combat Log"] = true, ["Voice"] = true }
+    for i = 2, NUM_CHAT_WINDOWS do
+        local name = GetChatWindowInfo(i)
+        if name and name ~= "" and not skipTabs[name] then
+            local frameIndex = i
+            local cb = CreateFrame("CheckButton", nil, generalContent, CHECKBOX_TEMPLATE)
+            cb:SetPoint("TOPLEFT", generalContent, "TOPLEFT", 20, y)
+            if not cb.Text then
+                cb.Text = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                cb.Text:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+            end
+            cb.Text:SetText(name)
+            cb:SetChecked(iSPSettings.ChatFrames[frameIndex] or false)
+            cb:SetScript("OnClick", function(self)
+                iSPSettings.ChatFrames[frameIndex] = self:GetChecked() and true or false
+            end)
+            y = y - 22
+        end
+    end
 
     scrollChildren[1]:SetHeight(math.abs(y) + 20)
 
@@ -2118,6 +2159,59 @@ function iSP:CreateOptionsPanel()
     scrollChildren[7]:SetHeight(200)  -- Static height
 
     -- ╭───────────────────────────────────────────────────────────────╮
+    -- │                     iCC Settings Tab                          │
+    -- │              (both variants built, toggled OnShow)             │
+    -- ╰───────────────────────────────────────────────────────────────╯
+
+    -- iCC Installed View
+    local iCCInstalledFrame = CreateFrame("Frame", nil, iCCContent)
+    iCCInstalledFrame:SetAllPoints(iCCContent)
+    iCCInstalledFrame:Hide()
+
+    y = -10
+    _, y = CreateSectionHeader(iCCInstalledFrame, L["ICCSettingsHeader"], y)
+    local iCCDesc
+    iCCDesc, y = CreateInfoText(iCCInstalledFrame,
+        L["ICCInstalledDesc"],
+        y, "GameFontHighlight")
+    y = y - 10
+    local iCCOpenBtn = CreateFrame("Button", nil, iCCInstalledFrame, "UIPanelButtonTemplate")
+    iCCOpenBtn:SetSize(180, 28)
+    iCCOpenBtn:SetPoint("TOPLEFT", iCCInstalledFrame, "TOPLEFT", 25, y)
+    iCCOpenBtn:SetText(L["ICCOpenSettings"])
+    iCCOpenBtn:SetScript("OnClick", function()
+        local iCCFrame = _G.iCC and _G.iCC.SettingsFrame
+        if iCCFrame then
+            local point, _, relPoint, xOfs, yOfs = settingsFrame:GetPoint()
+            iCCFrame:ClearAllPoints()
+            iCCFrame:SetPoint(point, UIParent, relPoint, xOfs, yOfs)
+            settingsFrame:Hide()
+            iCCFrame:Show()
+        else
+            print(L["DebugError"] .. L["ICCNotFound"])
+        end
+    end)
+
+    -- iCC Promo View
+    local iCCPromoFrame = CreateFrame("Frame", nil, iCCContent)
+    iCCPromoFrame:SetAllPoints(iCCContent)
+    iCCPromoFrame:Hide()
+
+    y = -10
+    _, y = CreateSectionHeader(iCCPromoFrame, L["ICCPromoHeader"], y)
+    local iCCPromo
+    iCCPromo, y = CreateInfoText(iCCPromoFrame,
+        L["ICCPromoDesc"],
+        y, "GameFontHighlight")
+    y = y - 4
+    local iCCPromoLink
+    iCCPromoLink, y = CreateInfoText(iCCPromoFrame,
+        L["ICCPromoLink"],
+        y, "GameFontDisableSmall")
+
+    scrollChildren[8]:SetHeight(200)  -- Static height
+
+    -- ╭───────────────────────────────────────────────────────────────╮
     -- │                      Show First Tab                           │
     -- ╰───────────────────────────────────────────────────────────────╯
     ShowTab(1)
@@ -2154,6 +2248,15 @@ function iSP:CreateOptionsPanel()
         -- Update iWR tab button text
         if iWRTabButton then
             iWRTabButton.text:SetText(iWRLoaded and L["TabIWR"] or L["TabIWRPromo"])
+        end
+
+        local iCCLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("iCommunityChat")
+        iCCInstalledFrame:SetShown(iCCLoaded)
+        iCCPromoFrame:SetShown(not iCCLoaded)
+
+        -- Update iCC tab button text
+        if iCCTabButton then
+            iCCTabButton.text:SetText(iCCLoaded and L["TabICC"] or L["TabICCPromo"])
         end
     end)
 
@@ -2192,6 +2295,9 @@ local function CloseOtherAddonSettings()
     -- iWR is an AceAddon global
     local iWRFrame = _G.iWR and _G.iWR.SettingsFrame
     if iWRFrame and iWRFrame:IsShown() then iWRFrame:Hide() end
+
+    local iCCFrame = _G.iCC and _G.iCC.SettingsFrame
+    if iCCFrame and iCCFrame:IsShown() then iCCFrame:Hide() end
 end
 
 function iSP:SettingsToggle()

@@ -22,6 +22,23 @@ local L = iSP.L or {}
 local Colors = iSP.Colors or {}
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                                Chat Output Routing                             │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+function iSP:PrintToChat(...)
+    local msg = table.concat({tostringall(...)}, " ")
+    if ChatFrame1 then ChatFrame1:AddMessage(msg) end
+    local frames = iSPSettings and iSPSettings.ChatFrames or {}
+    for i = 2, NUM_CHAT_WINDOWS do
+        if frames[i] then
+            local cf = _G["ChatFrame" .. i]
+            if cf then cf:AddMessage(msg) end
+        end
+    end
+end
+
+local print = function(...) iSP:PrintToChat(...) end
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                     Libraries                                  │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
 local LDBroker = LibStub("LibDataBroker-1.1", true)
@@ -215,6 +232,9 @@ iSP.SettingsDefault = {
         CALENDAR_UPDATE_PENDING_INVITES = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
         TRANSMOG_COLLECTION_UPDATED = { enabled = false, sound = "", duration = 0, startOffset = 0, loop = false, loopCount = 1, fadeIn = false, fadeOut = false },
     },
+
+    -- Chat Output Routing
+    ChatFrames = {},
 }
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮

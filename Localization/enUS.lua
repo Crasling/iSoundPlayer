@@ -320,6 +320,16 @@ L["IWRPromoHeader"] = Colors.iSP .. "iWillRemember"
 L["IWRPromoDesc"] = Colors.iSP .. "iWillRemember" .. Colors.Reset .. " is an addon designed to help you track and easily share player notes with friends.\n\n" .. Colors.Reset .. "Keep notes on players you meet — who to avoid, who's reliable, and share this knowledge with your guild."
 L["IWRPromoLink"] = "Available on the CurseForge App and at curseforge.com/wow/addons/iwillremember"
 
+L["TabICC"] = "iCC Settings"
+L["TabICCPromo"] = "iCommunityChat"
+L["ICCSettingsHeader"] = Colors.iSP .. "iCommunityChat Settings"
+L["ICCInstalledDesc"] = Colors.iSP .. "iCommunityChat" .. Colors.Reset .. " is installed! You can access iCC settings from here.\n\n" .. Colors.Gray .. "Note: These settings are managed by iCC and will affect the iCC addon." .. Colors.Reset
+L["ICCOpenSettings"] = "Open iCC Settings"
+L["ICCNotFound"] = "iCC settings not found!"
+L["ICCPromoHeader"] = Colors.iSP .. "iCommunityChat"
+L["ICCPromoDesc"] = Colors.iSP .. "iCommunityChat" .. Colors.Reset .. " is a cross-guild community addon. Create and manage custom communities with shared chat, roster, and ranks — beyond guild boundaries.\n\n" .. Colors.Reset .. "Your community, your chat."
+L["ICCPromoLink"] = "Available on the CurseForge App and at curseforge.com/wow/addons/icommunitychat"
+
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                              Minimap Tooltip                                   │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
@@ -359,3 +369,9 @@ L["SlashHelp"] = Colors.iSP .. "iSoundPlayer " .. Colors.White .. "v%s\n" ..
                 Colors.Green .. "  /isp settings" .. Colors.White .. " - Open settings\n" ..
                 Colors.Green .. "  /isp enable" .. Colors.White .. " - Enable addon\n" ..
                 Colors.Green .. "  /isp disable" .. Colors.White .. " - Disable addon"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                                Chat Output                                    │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["SectionChatOutput"] = "Chat Output"
+L["ChatFrameAlwaysOn"] = "(always on)"

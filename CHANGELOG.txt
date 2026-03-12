@@ -17,6 +17,15 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.5.1 - Release
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- Chat Output Routing: route addon messages to custom chat tabs
+- Chat Output settings section in General tab
+- iCommunityChat promo tab added to settings panel
+
+═══════════════════════════════════════════════════════════
 Version 0.5.0 - Cooldown Alerts
 ═══════════════════════════════════════════════════════════
 
