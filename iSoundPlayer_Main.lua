@@ -305,6 +305,10 @@ function iSP:InitializeSettings()
         iSPSettings.CooldownAlerts = {}
     end
 
+    if not iSPSettings.AuraAlerts then
+        iSPSettings.AuraAlerts = {}
+    end
+
     -- Auto-fill defaults for any triggers in TriggerMeta not yet in saved settings
     -- Handles upgrades from older versions that didn't have new triggers
     if iSP.TriggerMeta then
@@ -356,6 +360,9 @@ iSP.ActiveSounds = {}
 iSP.TriggerLastFired = {}  -- Cooldown tracking: triggerID -> GetTime()
 iSP.EventToTriggers = {}   -- Lookup: WoW event -> {triggerID, ...}
 iSP.CooldownStates = {}    -- Spell cooldown alerts: spellName -> true if on cooldown
+iSP.AuraSnapshot = { buffs = {}, debuffs = {} }  -- Last known player auras for diff detection
+iSP.AuraAlertQueue = {}       -- Queue of aura alert entries waiting to play
+iSP.AuraAlertPlaying = false  -- True while an aura alert sound is active
 
 -- Saved original volumes before any iSP boost (restored when last sound stops)
 iSP.SavedVolumes = nil
@@ -1267,6 +1274,236 @@ function iSP:OnSpellCooldownUpdate()
 end
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                               Aura Alerts                                     │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+
+local auraAlertFrame = CreateFrame("Frame")
+local auraAlertInitialized = false
+local AURA_STAGGER_DELAY = 0.8  -- Seconds between queued aura alert sounds
+
+function iSP:ScanPlayerAuras()
+    local buffs, debuffs = {}, {}
+    local toc = gameTocNumber
+
+    if toc >= 120000 then
+        -- ── Midnight 12.0+: use C_UnitAuras.GetUnitAuras (batch API) ──
+        local buffList = C_UnitAuras.GetUnitAuras("player", "HELPFUL")
+        if buffList then
+            for _, aura in ipairs(buffList) do
+                if aura.name then buffs[aura.name] = true end
+            end
+        end
+        local debuffList = C_UnitAuras.GetUnitAuras("player", "HARMFUL")
+        if debuffList then
+            for _, aura in ipairs(debuffList) do
+                if aura.name then debuffs[aura.name] = true end
+            end
+        end
+    elseif toc >= 100000 then
+        -- ── Retail 10.0–11.x: use C_UnitAuras.GetAuraDataByIndex ──
+        local i = 1
+        while true do
+            local aura = C_UnitAuras.GetAuraDataByIndex("player", i, "HELPFUL")
+            if not aura then break end
+            if aura.name then buffs[aura.name] = true end
+            i = i + 1
+        end
+        i = 1
+        while true do
+            local aura = C_UnitAuras.GetAuraDataByIndex("player", i, "HARMFUL")
+            if not aura then break end
+            if aura.name then debuffs[aura.name] = true end
+            i = i + 1
+        end
+    else
+        -- ── Classic Era / TBC / Wrath / Cata / MoP: use UnitBuff/UnitDebuff ──
+        local i = 1
+        while true do
+            local name = UnitBuff("player", i)
+            if not name then break end
+            buffs[name] = true
+            i = i + 1
+        end
+        i = 1
+        while true do
+            local name = UnitDebuff("player", i)
+            if not name then break end
+            debuffs[name] = true
+            i = i + 1
+        end
+    end
+
+    return buffs, debuffs
+end
+
+function iSP:RegisterAuraAlerts()
+    if not iSPSettings.AuraAlerts then return end
+    local hasEnabled = false
+    for auraName, config in pairs(iSPSettings.AuraAlerts) do
+        if config.enabled then
+            hasEnabled = true
+            Debug("Aura alert registered: " .. auraName .. " (" .. (config.triggerOn or "both") .. ", " .. (config.auraType or "ANY") .. ")", 3)
+        end
+    end
+    if hasEnabled then
+        auraAlertFrame:RegisterEvent("UNIT_AURA")
+        -- Take initial snapshot to avoid false "gained" alerts on login
+        if not auraAlertInitialized then
+            self.AuraSnapshot.buffs, self.AuraSnapshot.debuffs = self:ScanPlayerAuras()
+            auraAlertInitialized = true
+            Debug("Aura alert snapshot initialized: " .. self:CountTable(self.AuraSnapshot.buffs) .. " buffs, " .. self:CountTable(self.AuraSnapshot.debuffs) .. " debuffs.", 3)
+        end
+        Debug("UNIT_AURA event registered for aura alerts.", 3)
+    else
+        auraAlertFrame:UnregisterEvent("UNIT_AURA")
+        Debug("No enabled aura alerts found.", 3)
+    end
+end
+
+function iSP:CountTable(t)
+    local count = 0
+    for _ in pairs(t) do count = count + 1 end
+    return count
+end
+
+function iSP:OnUnitAura(unit)
+    if unit ~= "player" then return end
+    if not iSPSettings.AuraAlerts then return end
+
+    local newBuffs, newDebuffs = self:ScanPlayerAuras()
+    local oldBuffs = self.AuraSnapshot.buffs
+    local oldDebuffs = self.AuraSnapshot.debuffs
+
+    for auraName, config in pairs(iSPSettings.AuraAlerts) do
+        if config.enabled and config.sound and config.sound ~= "" then
+            local triggerOn = config.triggerOn or "both"
+            local auraType = config.auraType or "ANY"
+            local fired = false
+
+            -- Check buffs
+            if auraType == "BUFF" or auraType == "ANY" then
+                local wasActive = oldBuffs[auraName]
+                local isActive = newBuffs[auraName]
+                if isActive and not wasActive and (triggerOn == "gained" or triggerOn == "both") then
+                    self:QueueAuraAlert(auraName, "gained")
+                    fired = true
+                elseif wasActive and not isActive and (triggerOn == "lost" or triggerOn == "both") then
+                    self:QueueAuraAlert(auraName, "lost")
+                    fired = true
+                end
+            end
+
+            -- Check debuffs (skip if buff check already fired for "ANY" type)
+            if not fired and (auraType == "DEBUFF" or auraType == "ANY") then
+                local wasActive = oldDebuffs[auraName]
+                local isActive = newDebuffs[auraName]
+                if isActive and not wasActive and (triggerOn == "gained" or triggerOn == "both") then
+                    self:QueueAuraAlert(auraName, "gained")
+                elseif wasActive and not isActive and (triggerOn == "lost" or triggerOn == "both") then
+                    self:QueueAuraAlert(auraName, "lost")
+                end
+            end
+        end
+    end
+
+    self.AuraSnapshot.buffs = newBuffs
+    self.AuraSnapshot.debuffs = newDebuffs
+end
+
+function iSP:QueueAuraAlert(auraName, alertType)
+    -- Avoid duplicates in queue
+    for _, entry in ipairs(self.AuraAlertQueue) do
+        if entry.name == auraName and entry.type == alertType then
+            Debug("QueueAuraAlert: " .. auraName .. " (" .. alertType .. ") already in queue, skipping.", 3)
+            return
+        end
+    end
+    table.insert(self.AuraAlertQueue, { name = auraName, type = alertType })
+    Debug("QueueAuraAlert: " .. auraName .. " (" .. alertType .. ") added to queue (size: " .. #self.AuraAlertQueue .. ").", 3)
+
+    if not self.AuraAlertPlaying then
+        self:ProcessAuraAlertQueue()
+    end
+end
+
+function iSP:ProcessAuraAlertQueue()
+    if #self.AuraAlertQueue == 0 then
+        self.AuraAlertPlaying = false
+        Debug("ProcessAuraAlertQueue: Queue empty, done.", 3)
+        return
+    end
+
+    self.AuraAlertPlaying = true
+    local entry = table.remove(self.AuraAlertQueue, 1)
+    local config = iSPSettings.AuraAlerts and iSPSettings.AuraAlerts[entry.name]
+
+    if not config or not config.sound or config.sound == "" then
+        Debug("ProcessAuraAlertQueue: " .. entry.name .. " — no sound configured, skipping.", 2)
+        self:ProcessAuraAlertQueue()
+        return
+    end
+
+    Debug("ProcessAuraAlertQueue: Playing alert for " .. entry.name .. " (" .. entry.type .. ") — sound: " .. config.sound, 3)
+    local dur = (iSPSettings.SoundDurations and iSPSettings.SoundDurations[config.sound]) or 3
+    self:PlaySound(config.sound, { duration = dur })
+    if iSPSettings.ShowNotifications then
+        if entry.type == "gained" then
+            print(L["AuraGained"]:format(entry.name))
+        else
+            print(L["AuraLost"]:format(entry.name))
+        end
+    end
+
+    -- Send announcement if configured
+    if config.announce and config.announce ~= "" then
+        local announceMsg = "[iSP] " .. entry.name .. " " .. entry.type .. "!"
+        self:SendAuraAnnouncement(announceMsg, config.announce)
+    end
+
+    -- Process next queued alert after stagger delay
+    local remaining = #self.AuraAlertQueue
+    if remaining > 0 then
+        Debug("ProcessAuraAlertQueue: " .. remaining .. " more in queue, next in " .. AURA_STAGGER_DELAY .. "s.", 3)
+        C_Timer.After(AURA_STAGGER_DELAY, function() iSP:ProcessAuraAlertQueue() end)
+    else
+        self.AuraAlertPlaying = false
+    end
+end
+
+function iSP:SendAuraAnnouncement(message, channel)
+    local chatType
+    if channel == "GENERAL" then
+        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
+            chatType = "INSTANCE_CHAT"
+        elseif IsInRaid() then
+            chatType = "RAID"
+        elseif IsInGroup() then
+            chatType = "PARTY"
+        end
+    elseif channel == "PARTY" then
+        if IsInGroup() and not IsInRaid() then chatType = "PARTY" end
+    elseif channel == "RAID" then
+        if IsInRaid() then chatType = "RAID" end
+    elseif channel == "BATTLEGROUND" then
+        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then chatType = "INSTANCE_CHAT" end
+    elseif channel == "GUILD" then
+        if IsInGuild() then chatType = "GUILD" end
+    elseif channel == "SELF" then
+        print(L["PrintPrefix"] .. message)
+        return
+    end
+    if chatType then
+        SendChatMessage(message, chatType)
+    end
+end
+
+auraAlertFrame:SetScript("OnEvent", function(self, event, unit)
+    if event == "UNIT_AURA" then
+        iSP:OnUnitAura(unit)
+    end
+end)
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                              Addon Lifecycle Events                            │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
 
@@ -1279,6 +1516,9 @@ function iSP:OnAddonLoaded()
 
     -- Register cooldown alerts
     self:RegisterCooldownAlerts()
+
+    -- Register aura alerts
+    self:RegisterAuraAlerts()
 
     -- Determine game version name based on TOC
     local gameName = "Unknown"

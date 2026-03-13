@@ -110,6 +110,25 @@ L["Tab1General"] = "General"
 L["Tab2Sounds"] = "Sounds"
 L["Tab3Triggers"] = "Triggers"
 L["Tab4About"] = "About"
+L["Tab5AuraAlerts"] = "Aura Alerts"
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                         Options Panel - Aura Alerts Tab                        │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+L["AuraAlertsHeader"] = Colors.iSP .. "Aura Alerts"
+L["AuraAlertsInfo"] = "Play a sound when a buff or debuff is gained or lost.\nType the exact aura name as it appears in your buff/debuff tooltip."
+L["AuraNamePlaceholder"] = "Aura name (e.g. Hyperthermia)"
+L["AuraAlertGained"] = "Gained"
+L["AuraAlertLost"] = "Lost"
+L["AuraAlertBoth"] = "Both"
+L["AuraTypeBuff"] = "Buff"
+L["AuraTypeDebuff"] = "Debuff"
+L["AuraTypeAny"] = "Any"
+L["AuraAlertTriggerOn"] = "Trigger:"
+L["AuraAlertType"] = "Type:"
+L["AuraAlreadyTracked"] = Msg(Colors.Yellow .. "%s is already tracked." .. Colors.Reset)
+L["AuraGained"] = Msg("%s gained!")
+L["AuraLost"] = Msg("%s lost!")
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - General Tab                         │

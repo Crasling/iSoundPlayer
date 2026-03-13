@@ -300,6 +300,7 @@ function iSP:CreateOptionsPanel()
     local soundsContainer, soundsContent = CreateTabContent()
     local triggersContainer, triggersContent = CreateTabContent()
     local cooldownContainer, cooldownContent = CreateTabContent()
+    local auraContainer, auraContent = CreateTabContent()
     local aboutContainer, aboutContent = CreateTabContent()
 
     -- ALWAYS create addon tabs (addon detection happens on window show)
@@ -307,7 +308,7 @@ function iSP:CreateOptionsPanel()
     local iWRContainer, iWRContent = CreateTabContent()
     local iCCContainer, iCCContent = CreateTabContent()
 
-    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, aboutContainer, iNIFContainer, iWRContainer, iCCContainer}
+    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, auraContainer, aboutContainer, iNIFContainer, iWRContainer, iCCContainer}
     local sidebarButtons = {}
     local iNIFTabButton = nil  -- Reference to iNIF tab button
     local iWRTabButton = nil   -- Reference to iWR tab button
@@ -337,11 +338,12 @@ function iSP:CreateOptionsPanel()
         {type = "tab", label = L["Tab2Sounds"], index = 2},
         {type = "tab", label = L["Tab3Triggers"], index = 3},
         {type = "tab", label = "Cooldown Alerts", index = 4},
-        {type = "tab", label = L["Tab4About"], index = 5},
+        {type = "tab", label = L["Tab5AuraAlerts"], index = 5},
+        {type = "tab", label = L["Tab4About"], index = 6},
         {type = "header", label = L["SidebarHeaderOtherAddons"]},
-        {type = "tab", label = L["TabINIFPromo"], index = 6},
-        {type = "tab", label = L["TabIWRPromo"], index = 7},
-        {type = "tab", label = L["TabICCPromo"], index = 8},
+        {type = "tab", label = L["TabINIFPromo"], index = 7},
+        {type = "tab", label = L["TabIWRPromo"], index = 8},
+        {type = "tab", label = L["TabICCPromo"], index = 9},
     }
 
     local sidebarY = -6
@@ -379,11 +381,11 @@ function iSP:CreateOptionsPanel()
             table.insert(sidebarButtons, btn)
 
             -- Save references to addon tab buttons
-            if item.index == 6 then
+            if item.index == 7 then
                 iNIFTabButton = btn
-            elseif item.index == 7 then
-                iWRTabButton = btn
             elseif item.index == 8 then
+                iWRTabButton = btn
+            elseif item.index == 9 then
                 iCCTabButton = btn
             end
 
@@ -1969,6 +1971,329 @@ function iSP:CreateOptionsPanel()
 
     -- Initial render
     RefreshCooldownList()
+
+    -- ╭───────────────────────────────────────────────────────────────╮
+    -- │                   Aura Alerts Tab Content                      │
+    -- ╰───────────────────────────────────────────────────────────────╯
+    y = -10
+
+    _, y = CreateSectionHeader(auraContent, L["AuraAlertsHeader"], y)
+    _, y = CreateInfoText(auraContent, L["AuraAlertsInfo"], y)
+
+    y = y - 6
+
+    -- Add aura input row
+    local auraInputRow = CreateFrame("Frame", nil, auraContent)
+    auraInputRow:SetSize(520, 30)
+    auraInputRow:SetPoint("TOPLEFT", auraContent, "TOPLEFT", 14, y)
+
+    local auraInput = CreateFrame("EditBox", nil, auraInputRow, "InputBoxTemplate")
+    auraInput:SetSize(180, 24)
+    auraInput:SetPoint("LEFT", auraInputRow, "LEFT", 0, 0)
+    auraInput:SetAutoFocus(false)
+    auraInput:SetFontObject(ChatFontNormal)
+
+    local auraInputPlaceholder = auraInput:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    auraInputPlaceholder:SetPoint("LEFT", auraInput, "LEFT", 6, 0)
+    auraInputPlaceholder:SetText(L["AuraNamePlaceholder"])
+    auraInput:SetScript("OnTextChanged", function(self)
+        auraInputPlaceholder:SetShown(self:GetText() == "")
+    end)
+
+    -- Trigger On dropdown (Gained / Lost / Both)
+    local auraTriggerOnLabel = auraInputRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    auraTriggerOnLabel:SetPoint("LEFT", auraInput, "RIGHT", 10, 0)
+    auraTriggerOnLabel:SetText(L["AuraAlertTriggerOn"])
+
+    local auraTriggerOnBtn = CreateFrame("Button", nil, auraInputRow, "UIPanelButtonTemplate")
+    auraTriggerOnBtn:SetSize(70, 24)
+    auraTriggerOnBtn:SetPoint("LEFT", auraTriggerOnLabel, "RIGHT", 4, 0)
+    auraTriggerOnBtn:SetText(L["AuraAlertGained"])
+
+    local auraNewTriggerOn = "gained"
+    local auraTriggerOnMenu = CreateFrame("Frame", "iSP_AuraTriggerOnMenu", UIParent, "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(auraTriggerOnMenu, function(self, level)
+        local options = {
+            { text = L["AuraAlertGained"], value = "gained" },
+            { text = L["AuraAlertLost"], value = "lost" },
+            { text = L["AuraAlertBoth"], value = "both" },
+        }
+        for _, opt in ipairs(options) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = opt.text
+            info.func = function()
+                auraNewTriggerOn = opt.value
+                auraTriggerOnBtn:SetText(opt.text)
+                CloseDropDownMenus()
+            end
+            info.checked = (auraNewTriggerOn == opt.value)
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end, "MENU")
+
+    auraTriggerOnBtn:SetScript("OnClick", function(self)
+        ToggleDropDownMenu(1, nil, auraTriggerOnMenu, self, 0, 0)
+    end)
+
+    -- Aura Type dropdown (Buff / Debuff / Any)
+    local auraTypeLabel = auraInputRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    auraTypeLabel:SetPoint("LEFT", auraTriggerOnBtn, "RIGHT", 10, 0)
+    auraTypeLabel:SetText(L["AuraAlertType"])
+
+    local auraTypeBtn = CreateFrame("Button", nil, auraInputRow, "UIPanelButtonTemplate")
+    auraTypeBtn:SetSize(60, 24)
+    auraTypeBtn:SetPoint("LEFT", auraTypeLabel, "RIGHT", 4, 0)
+    auraTypeBtn:SetText(L["AuraTypeAny"])
+
+    local auraNewType = "ANY"
+    local auraTypeMenu = CreateFrame("Frame", "iSP_AuraTypeMenu", UIParent, "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(auraTypeMenu, function(self, level)
+        local options = {
+            { text = L["AuraTypeBuff"], value = "BUFF" },
+            { text = L["AuraTypeDebuff"], value = "DEBUFF" },
+            { text = L["AuraTypeAny"], value = "ANY" },
+        }
+        for _, opt in ipairs(options) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = opt.text
+            info.func = function()
+                auraNewType = opt.value
+                auraTypeBtn:SetText(opt.text)
+                CloseDropDownMenus()
+            end
+            info.checked = (auraNewType == opt.value)
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end, "MENU")
+
+    auraTypeBtn:SetScript("OnClick", function(self)
+        ToggleDropDownMenu(1, nil, auraTypeMenu, self, 0, 0)
+    end)
+
+    y = y - 36
+
+    -- Add button (on a second row for cleaner layout)
+    local auraAddRow = CreateFrame("Frame", nil, auraContent)
+    auraAddRow:SetSize(520, 30)
+    auraAddRow:SetPoint("TOPLEFT", auraContent, "TOPLEFT", 14, y)
+
+    local auraAddBtn = CreateFrame("Button", nil, auraAddRow, "UIPanelButtonTemplate")
+    auraAddBtn:SetSize(60, 24)
+    auraAddBtn:SetPoint("LEFT", auraAddRow, "LEFT", 0, 0)
+    auraAddBtn:SetText("Add")
+
+    y = y - 36
+
+    -- Aura list container
+    local auraListContainer = CreateFrame("Frame", nil, auraContent)
+    auraListContainer:SetPoint("TOPLEFT", auraContent, "TOPLEFT", 14, y)
+    auraListContainer:SetPoint("TOPRIGHT", auraContent, "TOPRIGHT", -14, y)
+    auraListContainer:SetHeight(400)
+
+    local auraFrames = {}
+
+    local function GetAuraSoundDisplayName(soundFile)
+        if not soundFile or soundFile == "" then return "None" end
+        if iSPSettings.SoundNames and iSPSettings.SoundNames[soundFile] and iSPSettings.SoundNames[soundFile] ~= "" then
+            return iSPSettings.SoundNames[soundFile]
+        end
+        return soundFile
+    end
+
+    local function GetTriggerOnText(triggerOn)
+        if triggerOn == "gained" then return L["AuraAlertGained"]
+        elseif triggerOn == "lost" then return L["AuraAlertLost"]
+        else return L["AuraAlertBoth"] end
+    end
+
+    local function GetAuraTypeText(auraType)
+        if auraType == "BUFF" then return L["AuraTypeBuff"]
+        elseif auraType == "DEBUFF" then return L["AuraTypeDebuff"]
+        else return L["AuraTypeAny"] end
+    end
+
+    local function RefreshAuraList()
+        for _, frame in ipairs(auraFrames) do
+            frame:Hide()
+        end
+
+        if not iSPSettings.AuraAlerts then return end
+
+        local sortedAuras = {}
+        for auraName in pairs(iSPSettings.AuraAlerts) do
+            table.insert(sortedAuras, auraName)
+        end
+        table.sort(sortedAuras)
+
+        local listY = 0
+        for i, auraName in ipairs(sortedAuras) do
+            local config = iSPSettings.AuraAlerts[auraName]
+
+            local af = auraFrames[i]
+            if not af then
+                af = CreateFrame("Frame", nil, auraListContainer, BACKDROP_TEMPLATE)
+                af:SetHeight(56)
+                af:SetBackdrop({
+                    bgFile = "Interface\\BUTTONS\\WHITE8X8",
+                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                    edgeSize = 8,
+                    insets = {left = 2, right = 2, top = 2, bottom = 2},
+                })
+                af:SetBackdropColor(0.08, 0.08, 0.1, 0.8)
+                af:SetBackdropBorderColor(0.4, 0.4, 0.5, 0.6)
+
+                -- Enable checkbox
+                local cb = CreateFrame("CheckButton", nil, af, CHECKBOX_TEMPLATE)
+                cb:SetPoint("TOPLEFT", af, "TOPLEFT", 8, -6)
+                if not cb.Text then
+                    cb.Text = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    cb.Text:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+                end
+                af.enableCB = cb
+
+                -- Aura name label
+                local nameLabel = af:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                nameLabel:SetPoint("LEFT", cb.Text, "RIGHT", 8, 1)
+                af.nameLabel = nameLabel
+
+                -- Trigger On label
+                local triggerOnLabel = af:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                triggerOnLabel:SetPoint("LEFT", nameLabel, "RIGHT", 12, 0)
+                af.triggerOnLabel = triggerOnLabel
+
+                -- Aura Type label
+                local typeLabel = af:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                typeLabel:SetPoint("LEFT", triggerOnLabel, "RIGHT", 8, 0)
+                af.typeLabel = typeLabel
+
+                -- Sound label
+                local soundLabel = af:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                soundLabel:SetPoint("TOPLEFT", af, "TOPLEFT", 12, -32)
+                soundLabel:SetText(L["SoundLabel"])
+                af.soundLabel = soundLabel
+
+                -- Sound dropdown button
+                local soundBtn = CreateFrame("Button", nil, af, "UIPanelButtonTemplate")
+                soundBtn:SetSize(200, 22)
+                soundBtn:SetPoint("LEFT", soundLabel, "RIGHT", 6, 0)
+                af.soundBtn = soundBtn
+
+                -- Test button
+                local testBtn = CreateFrame("Button", nil, af, "UIPanelButtonTemplate")
+                testBtn:SetSize(50, 22)
+                testBtn:SetPoint("LEFT", soundBtn, "RIGHT", 5, 0)
+                testBtn:SetText(L["TestBtn"])
+                af.testBtn = testBtn
+
+                -- Remove button
+                local removeBtn = CreateFrame("Button", nil, af, "UIPanelButtonTemplate")
+                removeBtn:SetSize(60, 22)
+                removeBtn:SetPoint("LEFT", testBtn, "RIGHT", 5, 0)
+                removeBtn:SetText("Remove")
+                af.removeBtn = removeBtn
+
+                auraFrames[i] = af
+            end
+
+            af:ClearAllPoints()
+            af:SetPoint("TOPLEFT", auraListContainer, "TOPLEFT", 0, listY)
+            af:SetPoint("RIGHT", auraListContainer, "RIGHT", 0, 0)
+            af:Show()
+
+            -- Configure enable checkbox
+            af.enableCB:SetChecked(config.enabled)
+            af.enableCB.Text:SetText(L["Enabled"])
+            af.enableCB:SetScript("OnClick", function(self)
+                iSPSettings.AuraAlerts[auraName].enabled = self:GetChecked() and true or false
+                iSP:RegisterAuraAlerts()
+            end)
+
+            -- Aura name
+            af.nameLabel:SetText(Colors.iSP .. auraName)
+
+            -- Trigger On / Type labels
+            af.triggerOnLabel:SetText(Colors.Gray .. "[" .. GetTriggerOnText(config.triggerOn or "both") .. "]|r")
+            af.typeLabel:SetText(Colors.Gray .. "[" .. GetAuraTypeText(config.auraType or "ANY") .. "]|r")
+
+            -- Sound button
+            af.soundBtn:SetText(GetAuraSoundDisplayName(config.sound))
+            af.soundBtn:SetScript("OnClick", function(self)
+                if not iSPSettings.SoundFiles or #iSPSettings.SoundFiles == 0 then
+                    print(L["DebugWarning"] .. L["NoSoundsWarning"])
+                    return
+                end
+
+                soundPicker.activeTriggerID = nil
+                soundPicker.activeDropdown = nil
+                soundPicker.currentSound = config.sound or ""
+                soundPicker.onSelectCallback = function(soundName)
+                    if soundName == "" then
+                        iSPSettings.AuraAlerts[auraName].sound = ""
+                    else
+                        iSPSettings.AuraAlerts[auraName].sound = soundName
+                    end
+                    af.soundBtn:SetText(GetAuraSoundDisplayName(soundName))
+                end
+
+                soundPicker:ClearAllPoints()
+                soundPicker:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
+                pickerSearch:SetText("")
+                pickerPlaceholder:Show()
+                soundPicker:Show()
+                RefreshSoundPicker()
+                pickerSearch:SetFocus()
+            end)
+
+            -- Test button
+            af.testBtn:SetScript("OnClick", function()
+                if config.sound and config.sound ~= "" then
+                    iSP:TestSound(config.sound)
+                else
+                    print(L["DebugError"] .. (L["NoSoundSelected"] or "No sound selected."))
+                end
+            end)
+
+            -- Remove button
+            af.removeBtn:SetScript("OnClick", function()
+                iSPSettings.AuraAlerts[auraName] = nil
+                RefreshAuraList()
+                iSP:RegisterAuraAlerts()
+            end)
+
+            listY = listY - 62
+        end
+
+        auraListContainer:SetHeight(math.max(math.abs(listY), 1))
+    end
+
+    -- Add button click handler
+    auraAddBtn:SetScript("OnClick", function()
+        local auraName = auraInput:GetText():match("^%s*(.-)%s*$")  -- trim
+        if not auraName or auraName == "" then return end
+
+        if iSPSettings.AuraAlerts[auraName] then
+            print(L["AuraAlreadyTracked"]:format(auraName))
+            return
+        end
+
+        iSPSettings.AuraAlerts[auraName] = {
+            enabled = true,
+            sound = "",
+            triggerOn = auraNewTriggerOn,
+            auraType = auraNewType,
+            announce = "",
+        }
+        auraInput:SetText("")
+        RefreshAuraList()
+        iSP:RegisterAuraAlerts()
+    end)
+
+    auraInput:SetScript("OnEnterPressed", function(self)
+        auraAddBtn:Click()
+    end)
+
+    -- Initial render
+    RefreshAuraList()
 
     -- ╭───────────────────────────────────────────────────────────────╮
     -- │                       About Tab Content                       │
