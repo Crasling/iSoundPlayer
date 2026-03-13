@@ -17,6 +17,27 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.6.1 - Release
+═══════════════════════════════════════════════════════════
+
+[FIX]
+- GetSpellCooldown replaced with version-safe wrapper
+  - Uses C_Spell.GetSpellCooldown on retail 11.0+ / Midnight 12.0+
+  - Falls back to GetSpellCooldown on Classic Era / TBC / Wrath / Cata / MoP
+
+═══════════════════════════════════════════════════════════
+Version 0.6.0 - Aura Alerts
+═══════════════════════════════════════════════════════════
+
+[NEW]
+- Aura Alerts: play a custom sound when a buff or debuff is gained or lost
+- New "Aura Alerts" tab in settings panel
+- Track buffs, debuffs, or any aura type per entry
+- Trigger on gained, lost, or both events
+- Version-safe aura scanning: C_UnitAuras.GetUnitAuras (Midnight 12.0+),
+  C_UnitAuras.GetAuraDataByIndex (Retail 10.0-11.x), UnitBuff/UnitDebuff (Classic)
+
+═══════════════════════════════════════════════════════════
 Version 0.5.1 - Release
 ═══════════════════════════════════════════════════════════
 

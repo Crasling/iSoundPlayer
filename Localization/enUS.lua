@@ -79,7 +79,7 @@ L["DebugError"] = Colors.iSP .. "[iSP]: " .. Colors.Red .. "ERROR: " .. Colors.R
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                 General Messages                               │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
-L["AddonLoaded"] = Msg(Colors.iSP .. "iSoundPlayer" .. Colors.Green .. " v%s" .. Colors.Reset .. " loaded!")
+L["AddonLoaded"] = Msg(Colors.iSP .. "iSoundPlayer" .. Colors.Green .. " v%s" .. Colors.Reset .. " Loaded.")
 L["AddonEnabled"] = Msg("Addon enabled")
 L["AddonDisabled"] = Msg("Addon disabled")
 L["WelcomeStart"] = Msg("Thank you ")

@@ -256,8 +256,10 @@ elseif gameTocNumber > 40000 and gameTocNumber < 49999 then
     iSP.GameVersionName = "Classic Cata"
 elseif gameTocNumber > 30000 and gameTocNumber < 39999 then
     iSP.GameVersionName = "Classic WotLK"
-elseif gameTocNumber > 20000 and gameTocNumber < 29999 then
-    iSP.GameVersionName = "Classic TBC"
+elseif gameTocNumber > 20500 and gameTocNumber < 29999 then
+    iSP.GameVersionName = "Anniversary TBC"
+elseif gameTocNumber > 20000 and gameTocNumber < 20499 then
+    iSP.GameVersionName = "Anniversary TBC"
 elseif gameTocNumber > 10000 and gameTocNumber < 19999 then
     iSP.GameVersionName = "Classic Era"
 else
@@ -1173,6 +1175,21 @@ iSP.CooldownPollCounts = {}       -- Poll iteration count per spell (safety limi
 local COOLDOWN_MAX_POLLS = 30     -- Max polls before giving up (~15 seconds)
 local COOLDOWN_STAGGER_DELAY = 0.8 -- Seconds between queued alert sounds
 
+-- Version-safe wrapper: C_Spell.GetSpellCooldown (11.0+) returns a table,
+-- GetSpellCooldown (Classic/TBC/Wrath/Cata/MoP) returns 3 values
+local function SafeGetSpellCooldown(spellName)
+    if C_Spell and C_Spell.GetSpellCooldown then
+        local info = C_Spell.GetSpellCooldown(spellName)
+        if info then
+            return info.startTime, info.duration, info.isEnabled
+        end
+        return nil, nil, nil
+    elseif GetSpellCooldown then
+        return GetSpellCooldown(spellName)
+    end
+    return nil, nil, nil
+end
+
 function iSP:CheckCooldownReady(spellName)
     local config = iSPSettings.CooldownAlerts and iSPSettings.CooldownAlerts[spellName]
     if not config or not config.enabled or not config.sound or config.sound == "" then
@@ -1191,7 +1208,7 @@ function iSP:CheckCooldownReady(spellName)
         return
     end
 
-    local start, duration, enabled = GetSpellCooldown(spellName)
+    local start, duration, enabled = SafeGetSpellCooldown(spellName)
     Debug("CheckCooldownReady: " .. spellName .. " — start=" .. tostring(start) .. " duration=" .. tostring(duration) .. " enabled=" .. tostring(enabled) .. " (poll " .. self.CooldownPollCounts[spellName] .. "/" .. COOLDOWN_MAX_POLLS .. ")", 3)
     if start and start > 0 and duration and duration > 1.5 then
         -- Still on cooldown — poll again in 0.5s
@@ -1261,7 +1278,7 @@ function iSP:OnSpellCooldownUpdate()
     if not iSPSettings.CooldownAlerts then return end
     for spellName, config in pairs(iSPSettings.CooldownAlerts) do
         if config.enabled and config.sound and config.sound ~= "" then
-            local start, duration, enabled = GetSpellCooldown(spellName)
+            local start, duration, enabled = SafeGetSpellCooldown(spellName)
             if start and start > 0 and duration and duration > 1.5 and not self.CooldownStates[spellName] then
                 -- Cooldown just started — begin polling
                 Debug("Cooldown detected: " .. spellName .. " — duration=" .. tostring(duration) .. "s, polling in " .. tostring(duration - 0.2) .. "s.", 3)
@@ -1520,27 +1537,9 @@ function iSP:OnAddonLoaded()
     -- Register aura alerts
     self:RegisterAuraAlerts()
 
-    -- Determine game version name based on TOC
-    local gameName = "Unknown"
-    local tocVersion = iSP.GameTocVersion or 0
-
-    if tocVersion >= 120000 then
-        gameName = "Retail WoW"
-    elseif tocVersion >= 50000 and tocVersion < 60000 then
-        gameName = "Classic MoP"
-    elseif tocVersion >= 40000 and tocVersion < 50000 then
-        gameName = "Classic Cata"
-    elseif tocVersion >= 30000 and tocVersion < 40000 then
-        gameName = "Classic Wrath"
-    elseif tocVersion >= 20000 and tocVersion < 30000 then
-        gameName = "Classic TBC"
-    elseif tocVersion >= 11500 and tocVersion < 20000 then
-        gameName = "Classic Era"
-    end
-
     -- Delayed loaded message (like iNIF/iWR)
     C_Timer.After(2, function()
-        print(L["PrintPrefix"] .. Colors.iSP .. "iSoundPlayer " .. Colors.Reset .. gameName .. Colors.Green .. " v" .. iSP.Version .. Colors.Reset .. " loaded!")
+        print(L["PrintPrefix"] .. Colors.iSP .. "iSoundPlayer " .. Colors.iSP .. iSP.GameVersionName .. Colors.Green .. " v" .. iSP.Version .. Colors.Reset .. " Loaded.")
 
         -- Welcome message (once per version)
         if iSPSettings.WelcomeMessage ~= iSP.Version then
