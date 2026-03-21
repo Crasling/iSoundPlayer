@@ -256,10 +256,10 @@ elseif gameTocNumber > 40000 and gameTocNumber < 49999 then
     iSP.GameVersionName = "Classic Cata"
 elseif gameTocNumber > 30000 and gameTocNumber < 39999 then
     iSP.GameVersionName = "Classic WotLK"
-elseif gameTocNumber > 20500 and gameTocNumber < 29999 then
+elseif gameTocNumber >= 20500 and gameTocNumber < 30000 then
     iSP.GameVersionName = "Anniversary TBC"
-elseif gameTocNumber > 20000 and gameTocNumber < 20499 then
-    iSP.GameVersionName = "Anniversary TBC"
+elseif gameTocNumber >= 20000 and gameTocNumber < 20500 then
+    iSP.GameVersionName = "Classic TBC"
 elseif gameTocNumber > 10000 and gameTocNumber < 19999 then
     iSP.GameVersionName = "Classic Era"
 else
@@ -365,6 +365,12 @@ iSP.CooldownStates = {}    -- Spell cooldown alerts: spellName -> true if on coo
 iSP.AuraSnapshot = { buffs = {}, debuffs = {} }  -- Last known player auras for diff detection
 iSP.AuraAlertQueue = {}       -- Queue of aura alert entries waiting to play
 iSP.AuraAlertPlaying = false  -- True while an aura alert sound is active
+iSP.AuraSpellCache = {}       -- { [spellID] = "BuffName" } — built outside combat for retail 12.0+
+iSP.AuraInstanceMap = {}      -- { [instanceID] = spellID } — tracked during combat for retail 12.0+
+
+-- Retail 12.0+ secret value support
+local IsSecretValue = _G.issecretvalue  -- nil on Classic/pre-12.0, function on Midnight+
+local ShouldSpellAuraBeSecret = C_Secrets and C_Secrets.ShouldSpellAuraBeSecret  -- whitelist check
 
 -- Saved original volumes before any iSP boost (restored when last sound stops)
 iSP.SavedVolumes = nil
@@ -1209,8 +1215,18 @@ function iSP:CheckCooldownReady(spellName)
     end
 
     local start, duration, enabled = SafeGetSpellCooldown(spellName)
-    Debug("CheckCooldownReady: " .. spellName .. " — start=" .. tostring(start) .. " duration=" .. tostring(duration) .. " enabled=" .. tostring(enabled) .. " (poll " .. self.CooldownPollCounts[spellName] .. "/" .. COOLDOWN_MAX_POLLS .. ")", 3)
-    if start and start > 0 and duration and duration > 1.5 then
+    -- On retail 12.0+, start/duration may be secret values during combat
+    -- issecretvalue check: if secret, trust it as "still on cooldown" (like MSA pattern)
+    local stillOnCooldown = false
+    if IsSecretValue and (IsSecretValue(start) or IsSecretValue(duration)) then
+        -- Secret values mean the spell IS on cooldown — keep polling
+        stillOnCooldown = true
+        Debug("CheckCooldownReady: " .. spellName .. " — secret values, assuming on CD.", 3)
+    elseif start and start > 0 and duration and duration > 1.5 then
+        stillOnCooldown = true
+    end
+    Debug("CheckCooldownReady: " .. spellName .. " — onCD=" .. tostring(stillOnCooldown) .. " (poll " .. self.CooldownPollCounts[spellName] .. "/" .. COOLDOWN_MAX_POLLS .. ")", 3)
+    if stillOnCooldown then
         -- Still on cooldown — poll again in 0.5s
         Debug("CheckCooldownReady: " .. spellName .. " still on cooldown, polling again in 0.5s.", 3)
         C_Timer.After(0.5, function() iSP:CheckCooldownReady(spellName) end)
@@ -1279,12 +1295,27 @@ function iSP:OnSpellCooldownUpdate()
     for spellName, config in pairs(iSPSettings.CooldownAlerts) do
         if config.enabled and config.sound and config.sound ~= "" then
             local start, duration, enabled = SafeGetSpellCooldown(spellName)
-            if start and start > 0 and duration and duration > 1.5 and not self.CooldownStates[spellName] then
+            -- On retail 12.0+, start/duration may be secret values during combat
+            local onCooldown = false
+            if IsSecretValue and (IsSecretValue(start) or IsSecretValue(duration)) then
+                -- Secret values mean the spell IS on cooldown
+                onCooldown = true
+            elseif start and start > 0 and duration and duration > 1.5 then
+                onCooldown = true
+            end
+            if onCooldown and not self.CooldownStates[spellName] then
                 -- Cooldown just started — begin polling
-                Debug("Cooldown detected: " .. spellName .. " — duration=" .. tostring(duration) .. "s, polling in " .. tostring(duration - 0.2) .. "s.", 3)
+                -- If duration is secret, use user-configured duration or 5s default
+                local pollDelay
+                if IsSecretValue and IsSecretValue(duration) then
+                    pollDelay = (config.duration and config.duration > 0.2) and (config.duration - 0.2) or 5
+                else
+                    pollDelay = (duration and duration > 0.2) and (duration - 0.2) or 5
+                end
+                Debug("Cooldown detected: " .. spellName .. " — polling in " .. tostring(pollDelay) .. "s.", 3)
                 self.CooldownStates[spellName] = true
                 self.CooldownPollCounts[spellName] = 0
-                C_Timer.After(duration - 0.2, function() iSP:CheckCooldownReady(spellName) end)
+                C_Timer.After(pollDelay, function() iSP:CheckCooldownReady(spellName) end)
             end
         end
     end
@@ -1304,16 +1335,36 @@ function iSP:ScanPlayerAuras()
 
     if toc >= 120000 then
         -- ── Midnight 12.0+: use C_UnitAuras.GetUnitAuras (batch API) ──
+        -- aura.name may be secret during combat — use spell cache fallback
         local buffList = C_UnitAuras.GetUnitAuras("player", "HELPFUL")
         if buffList then
             for _, aura in ipairs(buffList) do
-                if aura.name then buffs[aura.name] = true end
+                local name = aura.name
+                if IsSecretValue and IsSecretValue(name) then
+                    -- Name is secret, try spell cache
+                    local spellId = aura.spellId
+                    if spellId and not (IsSecretValue and IsSecretValue(spellId)) then
+                        name = self.AuraSpellCache[spellId]
+                    else
+                        name = nil
+                    end
+                end
+                if name then buffs[name] = true end
             end
         end
         local debuffList = C_UnitAuras.GetUnitAuras("player", "HARMFUL")
         if debuffList then
             for _, aura in ipairs(debuffList) do
-                if aura.name then debuffs[aura.name] = true end
+                local name = aura.name
+                if IsSecretValue and IsSecretValue(name) then
+                    local spellId = aura.spellId
+                    if spellId and not (IsSecretValue and IsSecretValue(spellId)) then
+                        name = self.AuraSpellCache[spellId]
+                    else
+                        name = nil
+                    end
+                end
+                if name then debuffs[name] = true end
             end
         end
     elseif toc >= 100000 then
@@ -1353,6 +1404,47 @@ function iSP:ScanPlayerAuras()
     return buffs, debuffs
 end
 
+function iSP:BuildAuraSpellCache()
+    if gameTocNumber < 120000 then return end
+
+    wipe(self.AuraSpellCache)
+    wipe(self.AuraInstanceMap)
+
+    local buffList = C_UnitAuras.GetUnitAuras("player", "HELPFUL")
+    if buffList then
+        for _, aura in ipairs(buffList) do
+            local spellId = aura.spellId
+            local name = aura.name
+            -- Skip secret values (shouldn't happen outside combat, but safety guard)
+            if spellId and name
+                and not (IsSecretValue and IsSecretValue(spellId))
+                and not (IsSecretValue and IsSecretValue(name)) then
+                self.AuraSpellCache[spellId] = name
+                if aura.auraInstanceID then
+                    self.AuraInstanceMap[aura.auraInstanceID] = spellId
+                end
+            end
+        end
+    end
+    local debuffList = C_UnitAuras.GetUnitAuras("player", "HARMFUL")
+    if debuffList then
+        for _, aura in ipairs(debuffList) do
+            local spellId = aura.spellId
+            local name = aura.name
+            if spellId and name
+                and not (IsSecretValue and IsSecretValue(spellId))
+                and not (IsSecretValue and IsSecretValue(name)) then
+                self.AuraSpellCache[spellId] = name
+                if aura.auraInstanceID then
+                    self.AuraInstanceMap[aura.auraInstanceID] = spellId
+                end
+            end
+        end
+    end
+
+    Debug("BuildAuraSpellCache: Cached " .. self:CountTable(self.AuraSpellCache) .. " spells, " .. self:CountTable(self.AuraInstanceMap) .. " instances.", 3)
+end
+
 function iSP:RegisterAuraAlerts()
     if not iSPSettings.AuraAlerts then return end
     local hasEnabled = false
@@ -1370,9 +1462,22 @@ function iSP:RegisterAuraAlerts()
             auraAlertInitialized = true
             Debug("Aura alert snapshot initialized: " .. self:CountTable(self.AuraSnapshot.buffs) .. " buffs, " .. self:CountTable(self.AuraSnapshot.debuffs) .. " debuffs.", 3)
         end
+        -- Retail 12.0+: register combat events for hybrid tracking
+        if gameTocNumber >= 120000 then
+            auraAlertFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            auraAlertFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+            auraAlertFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+            self:BuildAuraSpellCache()
+            Debug("Retail 12.0+ combat hybrid tracking registered.", 3)
+        end
         Debug("UNIT_AURA event registered for aura alerts.", 3)
     else
         auraAlertFrame:UnregisterEvent("UNIT_AURA")
+        if gameTocNumber >= 120000 then
+            auraAlertFrame:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            auraAlertFrame:UnregisterEvent("PLAYER_REGEN_DISABLED")
+            auraAlertFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
+        end
         Debug("No enabled aura alerts found.", 3)
     end
 end
@@ -1383,10 +1488,87 @@ function iSP:CountTable(t)
     return count
 end
 
-function iSP:OnUnitAura(unit)
+function iSP:CheckAuraAlert(auraName, alertType)
+    local config = iSPSettings.AuraAlerts and iSPSettings.AuraAlerts[auraName]
+    if not config or not config.enabled or not config.sound or config.sound == "" then return end
+    local triggerOn = config.triggerOn or "both"
+    if alertType == "gained" and (triggerOn == "gained" or triggerOn == "both") then
+        Debug("CheckAuraAlert: " .. auraName .. " gained — queuing.", 3)
+        self:QueueAuraAlert(auraName, "gained")
+    elseif alertType == "lost" and (triggerOn == "lost" or triggerOn == "both") then
+        Debug("CheckAuraAlert: " .. auraName .. " lost — queuing.", 3)
+        self:QueueAuraAlert(auraName, "lost")
+    end
+end
+
+function iSP:OnUnitAuraCombat(updateInfo)
+    -- Retail 12.0+ combat path: use instance IDs (NeverSecret) + spell cache + issecretvalue guards
+    if updateInfo.addedAuras then
+        for _, aura in ipairs(updateInfo.addedAuras) do
+            local instanceId = aura.auraInstanceID  -- NeverSecret
+            local spellId = aura.spellId
+
+            -- spellId may be a secret value during combat — check before using as table key
+            if IsSecretValue and IsSecretValue(spellId) then
+                -- Secret spellId: check if whitelist API knows it's non-secret
+                if ShouldSpellAuraBeSecret and not ShouldSpellAuraBeSecret(spellId) then
+                    -- Whitelisted, safe to use
+                    local auraName = self.AuraSpellCache[spellId]
+                    if auraName then
+                        self.AuraInstanceMap[instanceId] = spellId
+                        Debug("OnUnitAuraCombat: Aura gained (whitelisted): " .. auraName .. " (instance: " .. tostring(instanceId) .. ")", 3)
+                        self:CheckAuraAlert(auraName, "gained")
+                    else
+                        Debug("OnUnitAuraCombat: Whitelisted spellId not in cache (instance: " .. tostring(instanceId) .. ")", 3)
+                    end
+                else
+                    Debug("OnUnitAuraCombat: Aura gained but spellId is secret (instance: " .. tostring(instanceId) .. ")", 3)
+                end
+            elseif spellId then
+                -- Non-secret spellId: direct lookup
+                local auraName = self.AuraSpellCache[spellId]
+                if auraName then
+                    self.AuraInstanceMap[instanceId] = spellId
+                    Debug("OnUnitAuraCombat: Aura gained (cached): " .. auraName .. " (instance: " .. tostring(instanceId) .. ")", 3)
+                    self:CheckAuraAlert(auraName, "gained")
+                else
+                    Debug("OnUnitAuraCombat: Aura gained but spellId " .. tostring(spellId) .. " not in cache (instance: " .. tostring(instanceId) .. ")", 3)
+                end
+            else
+                Debug("OnUnitAuraCombat: Aura gained with nil spellId (instance: " .. tostring(instanceId) .. ")", 3)
+            end
+        end
+    end
+
+    if updateInfo.removedAuraInstanceIDs then
+        for _, instanceId in ipairs(updateInfo.removedAuraInstanceIDs) do
+            local spellId = self.AuraInstanceMap[instanceId]
+            if spellId then
+                local auraName = self.AuraSpellCache[spellId]
+                if auraName then
+                    Debug("OnUnitAuraCombat: Aura lost (cached): " .. auraName .. " (instance: " .. tostring(instanceId) .. ")", 3)
+                    self:CheckAuraAlert(auraName, "lost")
+                end
+                self.AuraInstanceMap[instanceId] = nil
+            else
+                Debug("OnUnitAuraCombat: Aura removed but instance " .. tostring(instanceId) .. " not tracked.", 3)
+            end
+        end
+    end
+end
+
+function iSP:OnUnitAura(unit, updateInfo)
     if unit ~= "player" then return end
     if not iSPSettings.AuraAlerts then return end
 
+    -- Retail 12.0+ combat: use instance ID tracking (aura names are secret)
+    if gameTocNumber >= 120000 and self.State.InCombat and updateInfo then
+        Debug("OnUnitAura: Retail combat path — using instance ID tracking.", 3)
+        self:OnUnitAuraCombat(updateInfo)
+        return
+    end
+
+    -- Normal path (outside combat on all versions, or Classic/TBC/Wrath/Cata/MoP always)
     local newBuffs, newDebuffs = self:ScanPlayerAuras()
     local oldBuffs = self.AuraSnapshot.buffs
     local oldDebuffs = self.AuraSnapshot.debuffs
@@ -1514,9 +1696,33 @@ function iSP:SendAuraAnnouncement(message, channel)
     end
 end
 
-auraAlertFrame:SetScript("OnEvent", function(self, event, unit)
+auraAlertFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "UNIT_AURA" then
-        iSP:OnUnitAura(unit)
+        local unit, updateInfo = ...
+        iSP:OnUnitAura(unit, updateInfo)
+    elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+        -- spellID from UNIT_SPELLCAST_SUCCEEDED is NeverSecret for player's own casts
+        local unitTarget, castGUID, spellID = ...
+        if unitTarget == "player" and spellID then
+            -- No secret check needed — spellID is NeverSecret here
+            local name = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID)
+            if name and not iSP.AuraSpellCache[spellID] then
+                iSP.AuraSpellCache[spellID] = name
+                Debug("UNIT_SPELLCAST_SUCCEEDED: Cached spellID " .. spellID .. " → " .. name, 3)
+            end
+        end
+    elseif event == "PLAYER_REGEN_DISABLED" then
+        Debug("Aura combat: PLAYER_REGEN_DISABLED — building spell cache.", 3)
+        iSP:BuildAuraSpellCache()
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        Debug("Aura combat: PLAYER_REGEN_ENABLED — rebuilding cache + post-combat scan.", 3)
+        iSP:BuildAuraSpellCache()
+        -- Post-combat full scan to catch any net changes during combat
+        C_Timer.After(0.5, function()
+            if not iSP.State.InCombat then
+                iSP:OnUnitAura("player")
+            end
+        end)
     end
 end)
 

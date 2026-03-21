@@ -1079,6 +1079,17 @@ function iSP:CreateOptionsPanel()
 
     _, y = CreateSectionHeader(triggersContent, L["Triggers"], y)
 
+    -- Retail 12.0+ combat restriction notice
+    local trigTocVersion = tonumber(iSP.GameTocVersion) or 0
+    if trigTocVersion >= 120000 then
+        local trigCombatNote = triggersContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        trigCombatNote:SetPoint("TOPLEFT", triggersContent, "TOPLEFT", 15, y - 2)
+        trigCombatNote:SetWidth(490)
+        trigCombatNote:SetText(L["RetailCombatNote"])
+        trigCombatNote:SetTextColor(0.7, 0.7, 0.7)
+        y = y - trigCombatNote:GetStringHeight() - 8
+    end
+
     local triggerInfo
     triggerInfo, y = CreateInfoText(triggersContent,
         L["TriggersInfo"],
@@ -1757,6 +1768,17 @@ function iSP:CreateOptionsPanel()
     _, y = CreateSectionHeader(cooldownContent, "Cooldown Alerts", y)
     _, y = CreateInfoText(cooldownContent, "Play a sound when a spell or ability comes off cooldown.\nType the exact spell name as it appears in your spellbook.", y)
 
+    -- Retail 12.0+ combat restriction notice
+    local cdTocVersion = tonumber(iSP.GameTocVersion) or 0
+    if cdTocVersion >= 120000 then
+        local cdCombatNote = cooldownContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        cdCombatNote:SetPoint("TOPLEFT", cooldownContent, "TOPLEFT", 15, y - 2)
+        cdCombatNote:SetWidth(490)
+        cdCombatNote:SetText(L["RetailCombatNote"])
+        cdCombatNote:SetTextColor(0.7, 0.7, 0.7)
+        y = y - cdCombatNote:GetStringHeight() - 8
+    end
+
     y = y - 6
 
     -- Add spell input row
@@ -1822,9 +1844,10 @@ function iSP:CreateOptionsPanel()
 
             -- Reuse or create frame
             local sf = cdSpellFrames[i]
+            local isRetail12 = cdTocVersion >= 120000
             if not sf then
                 sf = CreateFrame("Frame", nil, cdListContainer, BACKDROP_TEMPLATE)
-                sf:SetHeight(56)
+                sf:SetHeight(isRetail12 and 80 or 56)
                 sf:SetBackdrop({
                     bgFile = "Interface\\BUTTONS\\WHITE8X8",
                     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1873,6 +1896,29 @@ function iSP:CreateOptionsPanel()
                 removeBtn:SetPoint("LEFT", testBtn, "RIGHT", 5, 0)
                 removeBtn:SetText("Remove")
                 sf.removeBtn = removeBtn
+
+                -- Duration input (retail 12.0+ only — combat uses this instead of secret duration)
+                if isRetail12 then
+                    local durLabel = sf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    durLabel:SetPoint("TOPLEFT", sf, "TOPLEFT", 12, -56)
+                    durLabel:SetText(L["CooldownDuration"] or "Duration (sec):")
+                    durLabel:SetTextColor(0.7, 0.7, 0.7)
+                    sf.durLabel = durLabel
+
+                    local durInput = CreateFrame("EditBox", nil, sf, "InputBoxTemplate")
+                    durInput:SetSize(50, 20)
+                    durInput:SetPoint("LEFT", durLabel, "RIGHT", 6, 0)
+                    durInput:SetAutoFocus(false)
+                    durInput:SetFontObject(ChatFontNormal)
+                    durInput:SetNumeric(true)
+                    durInput:SetMaxLetters(4)
+                    sf.durInput = durInput
+
+                    local durHint = sf:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+                    durHint:SetPoint("LEFT", durInput, "RIGHT", 6, 0)
+                    durHint:SetText(L["CooldownDurationHint"] or "Used during combat when spell data is restricted")
+                    sf.durHint = durHint
+                end
 
                 cdSpellFrames[i] = sf
             end
@@ -1940,7 +1986,24 @@ function iSP:CreateOptionsPanel()
                 iSP:RegisterCooldownAlerts()
             end)
 
-            listY = listY - 62
+            -- Duration input (retail 12.0+ only)
+            if sf.durInput then
+                sf.durInput:SetText(config.duration and tostring(config.duration) or "")
+                sf.durInput:SetScript("OnEditFocusLost", function(self)
+                    local val = tonumber(self:GetText())
+                    if val and val > 0 then
+                        iSPSettings.CooldownAlerts[spellName].duration = val
+                    else
+                        iSPSettings.CooldownAlerts[spellName].duration = nil
+                        self:SetText("")
+                    end
+                end)
+                sf.durInput:SetScript("OnEnterPressed", function(self)
+                    self:ClearFocus()
+                end)
+            end
+
+            listY = listY - (isRetail12 and 86 or 62)
         end
 
         cdListContainer:SetHeight(math.max(math.abs(listY), 1))
@@ -1979,6 +2042,17 @@ function iSP:CreateOptionsPanel()
 
     _, y = CreateSectionHeader(auraContent, L["AuraAlertsHeader"], y)
     _, y = CreateInfoText(auraContent, L["AuraAlertsInfo"], y)
+
+    -- Retail 12.0+ combat restriction notice
+    local optTocVersion = tonumber(iSP.GameTocVersion) or 0
+    if optTocVersion >= 120000 then
+        local combatNote = auraContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        combatNote:SetPoint("TOPLEFT", auraContent, "TOPLEFT", 15, y - 2)
+        combatNote:SetWidth(490)
+        combatNote:SetText(L["AuraRetailCombatNote"])
+        combatNote:SetTextColor(0.7, 0.7, 0.7)
+        y = y - combatNote:GetStringHeight() - 8
+    end
 
     y = y - 6
 

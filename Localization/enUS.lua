@@ -129,6 +129,10 @@ L["AuraAlertType"] = "Type:"
 L["AuraAlreadyTracked"] = Msg(Colors.Yellow .. "%s is already tracked." .. Colors.Reset)
 L["AuraGained"] = Msg("%s gained!")
 L["AuraLost"] = Msg("%s lost!")
+L["AuraRetailCombatNote"] = "Retail 12.0 restricts aura data during combat. Alerts use cached spell data — buffs seen before combat are tracked reliably. New procs may have slight detection delays."
+L["RetailCombatNote"] = "Note: Retail 12.0 (Midnight) restricts addon access to combat data. This feature may not work reliably during combat on retail."
+L["CooldownDuration"] = "Duration (sec):"
+L["CooldownDurationHint"] = "Used during combat when spell data is restricted"
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                            Options Panel - General Tab                         │

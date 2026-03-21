@@ -17,6 +17,29 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.6.3 - Release
+═══════════════════════════════════════════════════════════
+
+[CHANGED] TBC version detection boundary updated (20500 split)
+
+═══════════════════════════════════════════════════════════
+Version 0.6.2 - Release
+═══════════════════════════════════════════════════════════
+
+[CHANGED] Retail 12.0 secret value handling
+- Replaced pcall guards with issecretvalue() for ~10x better performance
+- Secret values in cooldown tracking trusted as "on cooldown" (like MSA pattern)
+- C_Secrets.ShouldSpellAuraBeSecret() used for whitelist checking during combat
+- ScanPlayerAuras() uses spell cache fallback for secret aura names
+- BuildAuraSpellCache() guards against secret values
+- UNIT_SPELLCAST_SUCCEEDED spellID is NeverSecret — pcall removed entirely
+
+[NEW] Cooldown Alerts — custom duration (retail 12.0+ only)
+- Per-spell duration field in Cooldown Alerts settings
+- Used as poll delay when real cooldown duration is secret during combat
+- Without it, falls back to 5s default poll interval
+
+═══════════════════════════════════════════════════════════
 Version 0.6.1 - Release
 ═══════════════════════════════════════════════════════════
 
