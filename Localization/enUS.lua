@@ -173,6 +173,11 @@ L["AddSoundFile"] = Colors.iSP .. "Add Sound File"
 L["FilenameLabel"] = "Filename (e.g., mysound.mp3):"
 L["AddSound"] = "Add Sound"
 L["TestSound"] = "Test Sound"
+L["DefaultWoWSounds"] = Colors.iSP .. "Default WoW Sounds"
+L["AddDefaultSounds"] = "Add Default WoW Sounds"
+L["DefaultSoundsDesc"] = Colors.Gray .. "Adds built-in WoW sounds (Raid Warning, Ready Check, Level Up, etc.) to your sound list. These use the game's own audio and don't require any files." .. Colors.Reset
+L["DefaultSoundsAdded"] = "%d default sound(s) added to your list."
+L["DefaultSoundsExist"] = "All default sounds are already in your list."
 L["RegisteredSounds"] = Colors.iSP .. "Registered Sounds"
 L["NoSoundsRegistered"] = Colors.Gray .. "No sound files registered yet." .. Colors.Reset
 L["RemoveSound"] = "Remove"
@@ -352,6 +357,14 @@ L["ICCNotFound"] = "iCC settings not found!"
 L["ICCPromoHeader"] = Colors.iSP .. "iCommunityChat"
 L["ICCPromoDesc"] = Colors.iSP .. "iCommunityChat" .. Colors.Reset .. " is a cross-guild community addon. Create and manage custom communities with shared chat, roster, and ranks — beyond guild boundaries.\n\n" .. Colors.Reset .. "Your community, your chat."
 L["ICCPromoLink"] = "Available on the CurseForge App and at curseforge.com/wow/addons/icommunitychat"
+L["TabIST"] = "iST Settings"
+L["TabISTPromo"] = "iSealTwist"
+L["ISTSettingsHeader"] = Colors.iSP .. "iSealTwist"
+L["ISTInstalledDesc"] = Colors.iSP .. "iSealTwist" .. Colors.Reset .. " is installed. Open its settings to configure the swing timer and twist window."
+L["ISTOpenSettingsButton"] = "Open iST Settings"
+L["ISTPromoHeader"] = Colors.iSP .. "iSealTwist"
+L["ISTPromoDesc"] = Colors.iSP .. "iSealTwist" .. Colors.Reset .. " is a seal twist timing helper for TBC Paladins. Visual swing timer with latency-compensated twist window indicator. Time your seals perfectly."
+L["ISTPromoLink"] = "Available on the CurseForge App and at curseforge.com/wow/addons/isealtwist"
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                              Minimap Tooltip                                   │

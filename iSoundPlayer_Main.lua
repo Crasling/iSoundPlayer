@@ -85,6 +85,33 @@ iSP.ChannelCVars = {
 }
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
+-- │                         Default WoW Sounds (SoundKit IDs)                      │
+-- ╰────────────────────────────────────────────────────────────────────────────────╯
+-- Prefix "wow:" in SoundFiles indicates a built-in WoW sound played via PlaySound(id)
+iSP.DefaultSounds = {
+    { id = "wow:8959",  name = "Raid Warning" },
+    { id = "wow:8960",  name = "Raid Boss Emote" },
+    { id = "wow:5853",  name = "Ready Check" },
+    { id = "wow:8232",  name = "PvP Flag Taken" },
+    { id = "wow:8174",  name = "PvP Through Queue" },
+    { id = "wow:888",   name = "Level Up" },
+    { id = "wow:878",   name = "Quest Complete" },
+    { id = "wow:7355",  name = "Quest Accepted" },
+    { id = "wow:8554",  name = "Dungeon Finder Complete" },
+    { id = "wow:3339",  name = "Map Ping" },
+    { id = "wow:8458",  name = "Loot Roll Won" },
+    { id = "wow:5274",  name = "Auction Window Open" },
+    { id = "wow:5275",  name = "Auction Window Close" },
+    { id = "wow:6595",  name = "Alarm Clock Warning 1" },
+    { id = "wow:6594",  name = "Alarm Clock Warning 2" },
+    { id = "wow:6596",  name = "Alarm Clock Warning 3" },
+    { id = "wow:11466", name = "Garrison Alert" },
+    { id = "wow:43487", name = "UI Error" },
+    { id = "wow:7281",  name = "Murloc Aggro" },
+    { id = "wow:12867", name = "Bonus Objective Complete" },
+}
+
+-- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                                Runtime State                                   │
 -- ╰────────────────────────────────────────────────────────────────────────────────╯
 iSP.State = {
@@ -475,6 +502,28 @@ function iSP:PlaySound(fileName, options)
     local fadeOut = options.fadeOut or false
 
     local soundID = fileName .. "_" .. time()
+
+    -- Check if this is a built-in WoW sound (wow:12345 format)
+    local wowSoundKitID = fileName:match("^wow:(%d+)$")
+    if wowSoundKitID then
+        wowSoundKitID = tonumber(wowSoundKitID)
+        if iSPSettings.DebugMode then
+            print(string.format(L["SoundPlaying"], "WoW SoundKit #" .. wowSoundKitID))
+        end
+        local ok, willPlay, handle = pcall(_G.PlaySound, wowSoundKitID, iSPSettings.SoundChannel or "Master")
+        if ok and willPlay then
+            if iSPSettings.ShowNotifications then
+                local displayName = (iSPSettings.SoundNames and iSPSettings.SoundNames[fileName]) or fileName
+                print(string.format(L["SoundPlaying"], displayName))
+            end
+            return true
+        else
+            if iSPSettings.DebugMode then
+                print(string.format(L["SoundFailed"], fileName))
+            end
+            return false
+        end
+    end
 
     -- Try custom sounds folder first (survives CurseForge updates),
     -- then fall back to bundled sounds folder

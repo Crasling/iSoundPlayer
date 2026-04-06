@@ -308,11 +308,13 @@ function iSP:CreateOptionsPanel()
     local iWRContainer, iWRContent = CreateTabContent()
     local iCCContainer, iCCContent = CreateTabContent()
 
-    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, auraContainer, aboutContainer, iNIFContainer, iWRContainer, iCCContainer}
+    local iSTContainer, iSTContent = CreateTabContent()
+    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, auraContainer, aboutContainer, iNIFContainer, iWRContainer, iCCContainer, iSTContainer}
     local sidebarButtons = {}
     local iNIFTabButton = nil  -- Reference to iNIF tab button
     local iWRTabButton = nil   -- Reference to iWR tab button
     local iCCTabButton = nil   -- Reference to iCC tab button
+    local iSTTabButton = nil   -- Reference to iST tab button
     local activeIndex = 1
 
     local function ShowTab(index)
@@ -344,6 +346,7 @@ function iSP:CreateOptionsPanel()
         {type = "tab", label = L["TabINIFPromo"], index = 7},
         {type = "tab", label = L["TabIWRPromo"], index = 8},
         {type = "tab", label = L["TabICCPromo"], index = 9},
+        {type = "tab", label = L["TabISTPromo"], index = 10},
     }
 
     local sidebarY = -6
@@ -387,6 +390,8 @@ function iSP:CreateOptionsPanel()
                 iWRTabButton = btn
             elseif item.index == 9 then
                 iCCTabButton = btn
+            elseif item.index == 10 then
+                iSTTabButton = btn
             end
 
             sidebarY = sidebarY - 28
@@ -845,7 +850,7 @@ function iSP:CreateOptionsPanel()
             end
 
             -- Auto-add .mp3 if no extension
-            if not fileName:match("%.mp3$") and not fileName:match("%.ogg$") then
+            if not fileName:match("%.mp3$") and not fileName:match("%.ogg$") and not fileName:match("%.wav$") then
                 fileName = fileName .. ".mp3"
             end
 
@@ -881,7 +886,7 @@ function iSP:CreateOptionsPanel()
         local fileName = soundNameBox:GetText()
         if fileName and fileName ~= "" then
             -- Auto-add .mp3 if no extension
-            if not fileName:match("%.mp3$") and not fileName:match("%.ogg$") then
+            if not fileName:match("%.mp3$") and not fileName:match("%.ogg$") and not fileName:match("%.wav$") then
                 fileName = fileName .. ".mp3"
             end
             iSP:TestSound(fileName)
@@ -891,6 +896,48 @@ function iSP:CreateOptionsPanel()
     end)
 
     y = y - 28
+
+    -- Add Default WoW Sounds button
+    _, y = CreateSectionHeader(soundsContent, L["DefaultWoWSounds"], y)
+
+    local defaultSoundsBtn = CreateFrame("Button", nil, soundsContent, "UIPanelButtonTemplate")
+    defaultSoundsBtn:SetSize(200, 24)
+    defaultSoundsBtn:SetPoint("TOPLEFT", soundsContent, "TOPLEFT", 25, y)
+    defaultSoundsBtn:SetText(L["AddDefaultSounds"])
+    defaultSoundsBtn:SetScript("OnClick", function()
+        if not iSPSettings.SoundFiles then iSPSettings.SoundFiles = {} end
+        if not iSPSettings.SoundNames then iSPSettings.SoundNames = {} end
+
+        local added = 0
+        for _, default in ipairs(iSP.DefaultSounds) do
+            -- Check if already exists
+            local exists = false
+            for _, sound in ipairs(iSPSettings.SoundFiles) do
+                if sound == default.id then
+                    exists = true
+                    break
+                end
+            end
+            if not exists then
+                table.insert(iSPSettings.SoundFiles, default.id)
+                iSPSettings.SoundNames[default.id] = default.name
+                added = added + 1
+            end
+        end
+
+        if added > 0 then
+            print(L["PrintPrefix"] .. Colors.Green .. string.format(L["DefaultSoundsAdded"], added) .. Colors.Reset)
+            UpdateSoundList()
+        else
+            print(L["PrintPrefix"] .. Colors.Gray .. L["DefaultSoundsExist"] .. Colors.Reset)
+        end
+    end)
+
+    local defaultSoundsDesc = soundsContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    defaultSoundsDesc:SetPoint("TOPLEFT", soundsContent, "TOPLEFT", 25, y - 26)
+    defaultSoundsDesc:SetWidth(480)
+    defaultSoundsDesc:SetText(L["DefaultSoundsDesc"])
+    y = y - 46
 
     -- Custom sounds folder note
     local customNote
@@ -2611,6 +2658,49 @@ function iSP:CreateOptionsPanel()
     scrollChildren[8]:SetHeight(200)  -- Static height
 
     -- ╭───────────────────────────────────────────────────────────────╮
+    -- │                      iST Settings Tab                         │
+    -- ╰───────────────────────────────────────────────────────────────╯
+    local iSTInstalledFrame = CreateFrame("Frame", nil, iSTContent)
+    iSTInstalledFrame:SetAllPoints(iSTContent)
+    iSTInstalledFrame:Hide()
+    do
+        y = -10
+        _, y = CreateSectionHeader(iSTInstalledFrame, L["ISTSettingsHeader"], y)
+        local iSTDesc
+        iSTDesc, y = CreateInfoText(iSTInstalledFrame, L["ISTInstalledDesc"], y, "GameFontHighlight")
+        y = y - 10
+        local iSTButton = CreateFrame("Button", nil, iSTInstalledFrame, "UIPanelButtonTemplate")
+        iSTButton:SetSize(180, 28)
+        iSTButton:SetPoint("TOPLEFT", iSTInstalledFrame, "TOPLEFT", 25, y)
+        iSTButton:SetText(L["ISTOpenSettingsButton"])
+        iSTButton:SetScript("OnClick", function()
+            local iSTFrame = _G["iSTSettingsFrame"]
+            if iSTFrame then
+                local point, _, relPoint, xOfs, yOfs = settingsFrame:GetPoint()
+                iSTFrame:ClearAllPoints()
+                iSTFrame:SetPoint(point, UIParent, relPoint, xOfs, yOfs)
+                iSTFrame:Show()
+                settingsFrame:Hide()
+            end
+        end)
+    end
+
+    local iSTPromoFrame = CreateFrame("Frame", nil, iSTContent)
+    iSTPromoFrame:SetAllPoints(iSTContent)
+    iSTPromoFrame:Hide()
+    do
+        y = -10
+        _, y = CreateSectionHeader(iSTPromoFrame, L["ISTPromoHeader"], y)
+        local iSTPromo
+        iSTPromo, y = CreateInfoText(iSTPromoFrame, L["ISTPromoDesc"], y, "GameFontHighlight")
+        y = y - 4
+        local iSTPromoLink
+        iSTPromoLink, y = CreateInfoText(iSTPromoFrame, L["ISTPromoLink"], y, "GameFontDisableSmall")
+    end
+
+    scrollChildren[9]:SetHeight(200)
+
+    -- ╭───────────────────────────────────────────────────────────────╮
     -- │                      Show First Tab                           │
     -- ╰───────────────────────────────────────────────────────────────╯
     ShowTab(1)
@@ -2657,6 +2747,13 @@ function iSP:CreateOptionsPanel()
         if iCCTabButton then
             iCCTabButton.text:SetText(iCCLoaded and L["TabICC"] or L["TabICCPromo"])
         end
+
+        local iSTLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("iSealTwist")
+        iSTInstalledFrame:SetShown(iSTLoaded)
+        iSTPromoFrame:SetShown(not iSTLoaded)
+        if iSTTabButton then
+            iSTTabButton.text:SetText(iSTLoaded and L["TabIST"] or L["TabISTPromo"])
+        end
     end)
 
     -- ╭───────────────────────────────────────────────────────────────╮
@@ -2697,6 +2794,9 @@ local function CloseOtherAddonSettings()
 
     local iCCFrame = _G.iCC and _G.iCC.SettingsFrame
     if iCCFrame and iCCFrame:IsShown() then iCCFrame:Hide() end
+
+    local iSTFrame = _G["iSTSettingsFrame"]
+    if iSTFrame and iSTFrame:IsShown() then iSTFrame:Hide() end
 end
 
 function iSP:SettingsToggle()

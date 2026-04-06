@@ -17,6 +17,26 @@
 Changelog for iSoundPlayer
 
 ═══════════════════════════════════════════════════════════
+Version 0.6.5 - Release
+═══════════════════════════════════════════════════════════
+
+[NEW] iSealTwist promo/settings tab in Other Addons sidebar
+[CHANGED] Opening settings now closes other addon settings panels
+
+═══════════════════════════════════════════════════════════
+Version 0.6.4 - Release
+═══════════════════════════════════════════════════════════
+
+[NEW] Default WoW Sounds
+- One-click "Add Default WoW Sounds" button in the Sounds tab
+- 20 curated built-in game sounds (Raid Warning, Ready Check, Level Up, etc.)
+- Uses WoW's native PlaySound API — no files required
+- Stored as "wow:ID" format, played via SoundKit IDs
+
+[NEW] WAV file support
+- .wav files now accepted when adding sounds (16-bit PCM required by WoW)
+
+═══════════════════════════════════════════════════════════
 Version 0.6.3 - Release
 ═══════════════════════════════════════════════════════════
 
