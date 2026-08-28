@@ -351,15 +351,6 @@ L["IWRPromoHeader"]     = Colors.iSP .. "iWillRemember"
 L["IWRPromoDesc"]       = Colors.iSP .. "iWillRemember" .. Colors.Reset .. " помогает вести заметки об игроках и делиться ими с друзьями.\n\n" .. Colors.Reset .. "Записывайте, кого стоит избегать, а кому можно доверять, и делитесь заметками с гильдией."
 L["IWRPromoLink"]       = "Доступен в CurseForge App и на curseforge.com/wow/addons/iwillremember"
 
-L["TabICC"]             = "Настройки iCC" -- ИИ перевод
-L["TabICCPromo"]        = "iCommunityChat"
-L["ICCSettingsHeader"]  = Colors.iSP .. "Настройки iCommunityChat" -- ИИ перевод
-L["ICCInstalledDesc"]   = Colors.iSP .. "iCommunityChat" .. Colors.Reset .. " установлен! Вы можете открыть настройки iCC отсюда.\n\n" .. Colors.Gray .. "Примечание: Эти настройки управляются iCC и влияют на аддон iCC." .. Colors.Reset -- ИИ перевод
-L["ICCOpenSettings"]    = "Открыть настройки iCC" -- ИИ перевод
-L["ICCNotFound"]        = "Настройки iCC не найдены!" -- ИИ перевод
-L["ICCPromoHeader"]     = Colors.iSP .. "iCommunityChat"
-L["ICCPromoDesc"]       = Colors.iSP .. "iCommunityChat" .. Colors.Reset .. " — аддон для межгильдейских сообществ. Создавайте и управляйте сообществами с общим чатом, составом и рангами — за пределами гильдий.\n\n" .. Colors.Reset .. "Ваше сообщество, ваш чат." -- ИИ перевод
-L["ICCPromoLink"]       = "Доступен в CurseForge App и на curseforge.com/wow/addons/icommunitychat" -- ИИ перевод
 
 -- ╭────────────────────────────────────────────────────────────────────────────────╮
 -- │                              Minimap Tooltip                                   │

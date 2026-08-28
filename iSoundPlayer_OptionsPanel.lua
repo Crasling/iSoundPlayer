@@ -306,14 +306,11 @@ function iSP:CreateOptionsPanel()
     -- ALWAYS create addon tabs (addon detection happens on window show)
     local iNIFContainer, iNIFContent = CreateTabContent()
     local iWRContainer, iWRContent = CreateTabContent()
-    local iCCContainer, iCCContent = CreateTabContent()
-
     local iSTContainer, iSTContent = CreateTabContent()
-    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, auraContainer, aboutContainer, iNIFContainer, iWRContainer, iCCContainer, iSTContainer}
+    local tabContents = {generalContainer, soundsContainer, triggersContainer, cooldownContainer, auraContainer, aboutContainer, iNIFContainer, iWRContainer, iSTContainer}
     local sidebarButtons = {}
     local iNIFTabButton = nil  -- Reference to iNIF tab button
     local iWRTabButton = nil   -- Reference to iWR tab button
-    local iCCTabButton = nil   -- Reference to iCC tab button
     local iSTTabButton = nil   -- Reference to iST tab button
     local activeIndex = 1
 
@@ -345,8 +342,7 @@ function iSP:CreateOptionsPanel()
         {type = "header", label = L["SidebarHeaderOtherAddons"]},
         {type = "tab", label = L["TabINIFPromo"], index = 7},
         {type = "tab", label = L["TabIWRPromo"], index = 8},
-        {type = "tab", label = L["TabICCPromo"], index = 9},
-        {type = "tab", label = L["TabISTPromo"], index = 10},
+        {type = "tab", label = L["TabISTPromo"], index = 9},
     }
 
     local sidebarY = -6
@@ -389,8 +385,6 @@ function iSP:CreateOptionsPanel()
             elseif item.index == 8 then
                 iWRTabButton = btn
             elseif item.index == 9 then
-                iCCTabButton = btn
-            elseif item.index == 10 then
                 iSTTabButton = btn
             end
 
@@ -2605,59 +2599,6 @@ function iSP:CreateOptionsPanel()
     scrollChildren[7]:SetHeight(200)  -- Static height
 
     -- ╭───────────────────────────────────────────────────────────────╮
-    -- │                     iCC Settings Tab                          │
-    -- │              (both variants built, toggled OnShow)             │
-    -- ╰───────────────────────────────────────────────────────────────╯
-
-    -- iCC Installed View
-    local iCCInstalledFrame = CreateFrame("Frame", nil, iCCContent)
-    iCCInstalledFrame:SetAllPoints(iCCContent)
-    iCCInstalledFrame:Hide()
-
-    y = -10
-    _, y = CreateSectionHeader(iCCInstalledFrame, L["ICCSettingsHeader"], y)
-    local iCCDesc
-    iCCDesc, y = CreateInfoText(iCCInstalledFrame,
-        L["ICCInstalledDesc"],
-        y, "GameFontHighlight")
-    y = y - 10
-    local iCCOpenBtn = CreateFrame("Button", nil, iCCInstalledFrame, "UIPanelButtonTemplate")
-    iCCOpenBtn:SetSize(180, 28)
-    iCCOpenBtn:SetPoint("TOPLEFT", iCCInstalledFrame, "TOPLEFT", 25, y)
-    iCCOpenBtn:SetText(L["ICCOpenSettings"])
-    iCCOpenBtn:SetScript("OnClick", function()
-        local iCCFrame = _G.iCC and _G.iCC.SettingsFrame
-        if iCCFrame then
-            local point, _, relPoint, xOfs, yOfs = settingsFrame:GetPoint()
-            iCCFrame:ClearAllPoints()
-            iCCFrame:SetPoint(point, UIParent, relPoint, xOfs, yOfs)
-            settingsFrame:Hide()
-            iCCFrame:Show()
-        else
-            print(L["DebugError"] .. L["ICCNotFound"])
-        end
-    end)
-
-    -- iCC Promo View
-    local iCCPromoFrame = CreateFrame("Frame", nil, iCCContent)
-    iCCPromoFrame:SetAllPoints(iCCContent)
-    iCCPromoFrame:Hide()
-
-    y = -10
-    _, y = CreateSectionHeader(iCCPromoFrame, L["ICCPromoHeader"], y)
-    local iCCPromo
-    iCCPromo, y = CreateInfoText(iCCPromoFrame,
-        L["ICCPromoDesc"],
-        y, "GameFontHighlight")
-    y = y - 4
-    local iCCPromoLink
-    iCCPromoLink, y = CreateInfoText(iCCPromoFrame,
-        L["ICCPromoLink"],
-        y, "GameFontDisableSmall")
-
-    scrollChildren[8]:SetHeight(200)  -- Static height
-
-    -- ╭───────────────────────────────────────────────────────────────╮
     -- │                      iST Settings Tab                         │
     -- ╰───────────────────────────────────────────────────────────────╯
     local iSTInstalledFrame = CreateFrame("Frame", nil, iSTContent)
@@ -2739,15 +2680,6 @@ function iSP:CreateOptionsPanel()
             iWRTabButton.text:SetText(iWRLoaded and L["TabIWR"] or L["TabIWRPromo"])
         end
 
-        local iCCLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("iCommunityChat")
-        iCCInstalledFrame:SetShown(iCCLoaded)
-        iCCPromoFrame:SetShown(not iCCLoaded)
-
-        -- Update iCC tab button text
-        if iCCTabButton then
-            iCCTabButton.text:SetText(iCCLoaded and L["TabICC"] or L["TabICCPromo"])
-        end
-
         local iSTLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("iSealTwist")
         iSTInstalledFrame:SetShown(iSTLoaded)
         iSTPromoFrame:SetShown(not iSTLoaded)
@@ -2791,9 +2723,6 @@ local function CloseOtherAddonSettings()
     -- iWR is an AceAddon global
     local iWRFrame = _G.iWR and _G.iWR.SettingsFrame
     if iWRFrame and iWRFrame:IsShown() then iWRFrame:Hide() end
-
-    local iCCFrame = _G.iCC and _G.iCC.SettingsFrame
-    if iCCFrame and iCCFrame:IsShown() then iCCFrame:Hide() end
 
     local iSTFrame = _G["iSTSettingsFrame"]
     if iSTFrame and iSTFrame:IsShown() then iSTFrame:Hide() end

@@ -1,330 +1,262 @@
-═══════════════════════════════════════════════════════════
-██╗ ███████╗ ██████╗  ██╗   ██╗ ███╗   ██╗ ██████╗
-██║ ██╔════╝██╔═══██╗ ██║   ██║ ████╗  ██║ ██╔══██╗
-██║ ███████╗██║   ██║ ██║   ██║ ██╔██╗ ██║ ██║  ██║
-██║ ╚════██║██║   ██║ ██║   ██║ ██║╚██╗██║ ██║  ██║
-██║ ███████║╚██████╔╝ ╚██████╔╝ ██║ ╚████║ ██████╔╝
-╚═╝ ╚══════╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═════╝
+================================================================================
+ iSoundPlayer - Changelog
+================================================================================
 
-██████╗ ██╗      █████╗ ██╗   ██╗ ███████╗ ██████╗
-██╔══██╗██║     ██╔══██╗╚██╗ ██╔╝ ██╔════╝ ██╔══██╗
-██████╔╝██║     ███████║ ╚████╔╝  █████╗   ██████╔╝
-██╔═══╝ ██║     ██╔══██║  ╚██╔╝   ██╔══╝   ██╔══██╗
-██║     ███████╗██║  ██║   ██║    ███████╗ ██║  ██║
-╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚══════╝ ╚═╝  ╚═╝
-═══════════════════════════════════════════════════════════
-
-Changelog for iSoundPlayer
-
-═══════════════════════════════════════════════════════════
-Version 0.6.6 - Release
+v0.6.6 - Release
 --------------------------------------------------------------------------------
 
-[CHANGED] Added Anniversary TBC client interface 20506 support
+ [CHANGED] Added Anniversary TBC client interface 20506 support
+ [CHANGED] Removed deprecated iCommunityChat from the Other Addons panel
 
-Version 0.6.5 - Release
-═══════════════════════════════════════════════════════════
+v0.6.5 - Release
+--------------------------------------------------------------------------------
 
-[NEW] iSealTwist promo/settings tab in Other Addons sidebar
-[CHANGED] Opening settings now closes other addon settings panels
+ [NEW] iSealTwist promo/settings tab in Other Addons sidebar
+ [CHANGED] Opening settings now closes other addon settings panels
 
-═══════════════════════════════════════════════════════════
-Version 0.6.4 - Release
-═══════════════════════════════════════════════════════════
+v0.6.4 - Release
+--------------------------------------------------------------------------------
 
-[NEW] Default WoW Sounds
-- One-click "Add Default WoW Sounds" button in the Sounds tab
-- 20 curated built-in game sounds (Raid Warning, Ready Check, Level Up, etc.)
-- Uses WoW's native PlaySound API — no files required
-- Stored as "wow:ID" format, played via SoundKit IDs
+ [NEW] Default WoW Sounds
+  - One-click "Add Default WoW Sounds" button in the Sounds tab
+  - 20 curated built-in game sounds (Raid Warning, Ready Check, Level Up, etc.)
+  - Uses WoW's native PlaySound API — no files required
+  - Stored as "wow:ID" format, played via SoundKit IDs
 
-[NEW] WAV file support
-- .wav files now accepted when adding sounds (16-bit PCM required by WoW)
+ [NEW] WAV file support
+  - .wav files now accepted when adding sounds (16-bit PCM required by WoW)
 
-═══════════════════════════════════════════════════════════
-Version 0.6.3 - Release
-═══════════════════════════════════════════════════════════
+v0.6.3 - Release
+--------------------------------------------------------------------------------
 
-[CHANGED] TBC version detection boundary updated (20500 split)
+ [CHANGED] TBC version detection boundary updated (20500 split)
 
-═══════════════════════════════════════════════════════════
-Version 0.6.2 - Release
-═══════════════════════════════════════════════════════════
+v0.6.2 - Release
+--------------------------------------------------------------------------------
 
-[CHANGED] Retail 12.0 secret value handling
-- Replaced pcall guards with issecretvalue() for ~10x better performance
-- Secret values in cooldown tracking trusted as "on cooldown" (like MSA pattern)
-- C_Secrets.ShouldSpellAuraBeSecret() used for whitelist checking during combat
-- ScanPlayerAuras() uses spell cache fallback for secret aura names
-- BuildAuraSpellCache() guards against secret values
-- UNIT_SPELLCAST_SUCCEEDED spellID is NeverSecret — pcall removed entirely
+ [CHANGED] Retail 12.0 secret value handling
+  - Replaced pcall guards with issecretvalue() for ~10x better performance
+  - Secret values in cooldown tracking trusted as "on cooldown" (like MSA pattern)
+  - C_Secrets.ShouldSpellAuraBeSecret() used for whitelist checking during combat
+  - ScanPlayerAuras() uses spell cache fallback for secret aura names
+  - BuildAuraSpellCache() guards against secret values
+  - UNIT_SPELLCAST_SUCCEEDED spellID is NeverSecret — pcall removed entirely
 
-[NEW] Cooldown Alerts — custom duration (retail 12.0+ only)
-- Per-spell duration field in Cooldown Alerts settings
-- Used as poll delay when real cooldown duration is secret during combat
-- Without it, falls back to 5s default poll interval
+ [NEW] Cooldown Alerts — custom duration (retail 12.0+ only)
+  - Per-spell duration field in Cooldown Alerts settings
+  - Used as poll delay when real cooldown duration is secret during combat
+  - Without it, falls back to 5s default poll interval
 
-═══════════════════════════════════════════════════════════
-Version 0.6.1 - Release
-═══════════════════════════════════════════════════════════
+v0.6.1 - Release
+--------------------------------------------------------------------------------
 
-[FIX]
-- GetSpellCooldown replaced with version-safe wrapper
+ [FIX] GetSpellCooldown replaced with version-safe wrapper
   - Uses C_Spell.GetSpellCooldown on retail 11.0+ / Midnight 12.0+
   - Falls back to GetSpellCooldown on Classic Era / TBC / Wrath / Cata / MoP
 
-═══════════════════════════════════════════════════════════
-Version 0.6.0 - Aura Alerts
-═══════════════════════════════════════════════════════════
+v0.6.0 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Aura Alerts: play a custom sound when a buff or debuff is gained or lost
-- New "Aura Alerts" tab in settings panel
-- Track buffs, debuffs, or any aura type per entry
-- Trigger on gained, lost, or both events
-- Version-safe aura scanning: C_UnitAuras.GetUnitAuras (Midnight 12.0+),
+ [NEW] Aura Alerts: play a custom sound when a buff or debuff is gained or lost
+ [NEW] New "Aura Alerts" tab in settings panel
+ [NEW] Track buffs, debuffs, or any aura type per entry
+ [NEW] Trigger on gained, lost, or both events
+ [NEW] Version-safe aura scanning: C_UnitAuras.GetUnitAuras (Midnight 12.0+),
   C_UnitAuras.GetAuraDataByIndex (Retail 10.0-11.x), UnitBuff/UnitDebuff (Classic)
 
-═══════════════════════════════════════════════════════════
-Version 0.5.1 - Release
-═══════════════════════════════════════════════════════════
+v0.5.1 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Chat Output Routing: route addon messages to custom chat tabs
-- Chat Output settings section in General tab
-- iCommunityChat promo tab added to settings panel
+ [NEW] Chat Output Routing: route addon messages to custom chat tabs
+ [NEW] Chat Output settings section in General tab
+ [NEW] iCommunityChat promo tab added to settings panel
 
-═══════════════════════════════════════════════════════════
-Version 0.5.0 - Cooldown Alerts
-═══════════════════════════════════════════════════════════
+v0.5.0 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Cooldown Alerts: play a custom sound when a spell or ability comes off cooldown
-- New "Cooldown Alerts" tab in settings panel
-- Add spells by name, assign a sound, enable/disable individually
-- Test button to preview the alert sound
-- Notification message when a spell comes off cooldown
+ [NEW] Cooldown Alerts: play a custom sound when a spell or ability comes off cooldown
+ [NEW] New "Cooldown Alerts" tab in settings panel
+ [NEW] Add spells by name, assign a sound, enable/disable individually
+ [NEW] Test button to preview the alert sound
+ [NEW] Notification message when a spell comes off cooldown
 
-[TECHNICAL]
-- Polling-based cooldown detection (reliable on Classic TBC where events don't fire on expiry)
-- Queued alert system: simultaneous cooldowns play sounds sequentially with stagger delay
-- Duplicate queue prevention and max poll safety limit
-- Sound picker adapted with callback pattern for non-trigger usage
+ [CHANGED] Polling-based cooldown detection (reliable on Classic TBC where events don't fire on expiry)
+ [CHANGED] Queued alert system: simultaneous cooldowns play sounds sequentially with stagger delay
+ [CHANGED] Duplicate queue prevention and max poll safety limit
+ [CHANGED] Sound picker adapted with callback pattern for non-trigger usage
 
  Alpha Build History
- ~~~~~~~~~~~~~~~~~~~
   0.4.1.1 - Cooldown Alerts: play a sound when spells come off cooldown
 
-═══════════════════════════════════════════════════════════
-Version 0.4.0 - Named Sounds, Self Announce & Companion Folder
-═══════════════════════════════════════════════════════════
+v0.4.0 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Named Sounds: give registered sounds a custom display name
-- Display name shown in sound list, sound picker, and trigger dropdowns
-- Rename button ("Aa") on each registered sound row
-- Display name input field when adding a new sound
-- Sound picker search now matches both filename and custom name
-- "Self" announce channel: prints trigger announcements to your own chat only
-- Companion Sounds folder: sounds stored in a separate iSoundPlayer_Sounds folder
-- Companion folder survives CurseForge updates (not inside the addon folder)
-- Sound fallback: tries companion folder first, then bundled sounds folder
+ [NEW] Named Sounds: give registered sounds a custom display name
+ [NEW] Display name shown in sound list, sound picker, and trigger dropdowns
+ [NEW] Rename button ("Aa") on each registered sound row
+ [NEW] Display name input field when adding a new sound
+ [NEW] Sound picker search now matches both filename and custom name
+ [NEW] "Self" announce channel: prints trigger announcements to your own chat only
+ [NEW] Companion Sounds folder: sounds stored in a separate iSoundPlayer_Sounds folder
+ [NEW] Companion folder survives CurseForge updates (not inside the addon folder)
+ [NEW] Sound fallback: tries companion folder first, then bundled sounds folder
 
-[UPDATED]
-- Setup Guide updated to reference creating the standalone companion folder
-- Sound tooltip no longer mentions bundled sounds folder
-- Long sound filenames are now truncated in the registered sounds list
+ [CHANGED] Setup Guide updated to reference creating the standalone companion folder
+ [CHANGED] Sound tooltip no longer mentions bundled sounds folder
+ [CHANGED] Long sound filenames are now truncated in the registered sounds list
 
-[FIXED]
-- Fixed StaticPopup EditBox crash on Classic TBC (EditBox casing)
-- Fixed Setup Guide not auto-hiding when entering combat
-- Minimap left-click now blocked during combat
+ [FIX] Fixed StaticPopup EditBox crash on Classic TBC (EditBox casing)
+ [FIX] Fixed Setup Guide not auto-hiding when entering combat
+ [FIX] Minimap left-click now blocked during combat
 
  Alpha Build History
- ~~~~~~~~~~~~~~~~~~~
   0.4.0.1  - Minimap left-click blocked in combat, Setup Guide combat close fix
   0.3.9.1  - Self announce channel, EditBox casing fix
   0.3.8.1  - Named sounds, setup guide update, sound display truncation
   0.3.7.1  - Companion sounds folder, custom sounds path, sound fallback
 
-═══════════════════════════════════════════════════════════
-Version 0.3.7 - TBC Icon Compatibility
-═══════════════════════════════════════════════════════════
+v0.3.7 - Release
+--------------------------------------------------------------------------------
 
-[UPDATED]
-- Replaced all 17 Achievement_ prefixed trigger icons with TBC-safe alternatives
-- 9 trigger icons replaced: Level Up, XP Gained, Target Changed, Quest Turned In,
+ [CHANGED] Replaced all 17 Achievement_ prefixed trigger icons with TBC-safe alternatives
+ [CHANGED] 9 trigger icons replaced: Level Up, XP Gained, Target Changed, Quest Turned In,
   Loot Roll Started, Guild Chat, Entering World, Double Kill, Triple Kill
-- 4 category icons replaced: Player Events, Achievements & Quests, Dungeon & Raid, PvP Kills
-- 2 multi-category icons replaced: Group & Social, PvP Multi-Kills
+ [CHANGED] 4 category icons replaced: Player Events, Achievements & Quests, Dungeon & Raid, PvP Kills
+ [CHANGED] 2 multi-category icons replaced: Group & Social, PvP Multi-Kills
 
-[NEW]
-- ACHIEVEMENT_EARNED trigger hidden on pre-WotLK clients
-- Dynamic category name: "Achievements & Quests" on WotLK+, "Quests" on Classic/TBC
+ [NEW] ACHIEVEMENT_EARNED trigger hidden on pre-WotLK clients
+ [NEW] Dynamic category name: "Achievements & Quests" on WotLK+, "Quests" on Classic/TBC
 
-═══════════════════════════════════════════════════════════
-Version 0.3.5 - Custom Volume Sliders
-═══════════════════════════════════════════════════════════
+v0.3.5 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Custom iWR-style volume sliders replacing OptionsSliderTemplate
-- BackdropTemplate track (200x12) with fill bar, tick marks, and thumb
-- 11 tick marks at every 10% (0%, 10%, ..., 100%)
-- Orange fill bar showing current volume level
-- Click-on-track, thumb drag, and mousewheel interaction
-- Min/Max labels ("0%"/"100%") below each track
+ [NEW] Custom iWR-style volume sliders replacing OptionsSliderTemplate
+ [NEW] BackdropTemplate track (200x12) with fill bar, tick marks, and thumb
+ [NEW] 11 tick marks at every 10% (0%, 10%, ..., 100%)
+ [NEW] Orange fill bar showing current volume level
+ [NEW] Click-on-track, thumb drag, and mousewheel interaction
+ [NEW] Min/Max labels ("0%"/"100%") below each track
 
-[UPDATED]
-- Channel Volume and Soundfile Volume sliders both use new custom style
+ [CHANGED] Channel Volume and Soundfile Volume sliders both use new custom style
 
-═══════════════════════════════════════════════════════════
-Version 0.3.1 - About Page Update
-═══════════════════════════════════════════════════════════
+v0.3.1 - Release
+--------------------------------------------------------------------------------
 
-[UPDATED]
-- About page: icon size 48→64, spacing aligned with iWR/iNIF
-- Added Discord section with copyable invite link
+ [CHANGED] About page: icon size 48→64, spacing aligned with iWR/iNIF
+ [CHANGED] Added Discord section with copyable invite link
 
-═══════════════════════════════════════════════════════════
-Version 0.3.0 - Trigger Expansion & Collapsible UI
-═══════════════════════════════════════════════════════════
+v0.3.0 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- 44 new triggers across 4 new categories (75 total triggers, 13 categories)
-- New categories: Profession & Crafting, Economy & Mail, Pet & Mount, UI & System
-- Version-gating: triggers are automatically hidden if not available for current WoW version
-- Collapsible category headers with click to expand/collapse
-- Category-level enable/disable checkbox (toggle all triggers in a category)
-- Search box to filter triggers by name, description, or event ID
-- Per-trigger cooldown system to prevent sound spam on high-frequency events
-- Data-driven event system — no more hardcoded event handlers
+ [NEW] 44 new triggers across 4 new categories (75 total triggers, 13 categories)
+ [NEW] New categories: Profession & Crafting, Economy & Mail, Pet & Mount, UI & System
+ [NEW] Version-gating: triggers are automatically hidden if not available for current WoW version
+ [NEW] Collapsible category headers with click to expand/collapse
+ [NEW] Category-level enable/disable checkbox (toggle all triggers in a category)
+ [NEW] Search box to filter triggers by name, description, or event ID
+ [NEW] Per-trigger cooldown system to prevent sound spam on high-frequency events
+ [NEW] Data-driven event system — no more hardcoded event handlers
 
-[CATEGORIES]
-- Player Events: +7 triggers (XP, gold, control lost/gained, gear change, movement)
-- Combat Events: +4 triggers (spell cast start/complete/interrupted, form change)
-- Achievements & Quests: +2 triggers (criteria complete, quest log update)
-- Loot & Items: +4 triggers (loot message, money looted, loot roll, boss loot)
-- Group & Social: +9 triggers (party invite, whisper, guild/party/raid chat, friends, guild MOTD)
-- Dungeon & Raid: +2 triggers (lockout warning, M+ completed)
-- Profession & Crafting: 4 triggers (trade window, trade accepted, skill up)
-- Economy & Mail: 7 triggers (mailbox, mail sent, pending mail, auction house)
-- Pet & Mount: 2 triggers (pet battle start/end — MoP+)
-- UI & System: 4 triggers (durability, bags, calendar invite, transmog — mixed versions)
+ [CHANGED] Player Events: +7 triggers (XP, gold, control lost/gained, gear change, movement)
+ [CHANGED] Combat Events: +4 triggers (spell cast start/complete/interrupted, form change)
+ [CHANGED] Achievements & Quests: +2 triggers (criteria complete, quest log update)
+ [CHANGED] Loot & Items: +4 triggers (loot message, money looted, loot roll, boss loot)
+ [CHANGED] Group & Social: +9 triggers (party invite, whisper, guild/party/raid chat, friends, guild MOTD)
+ [CHANGED] Dungeon & Raid: +2 triggers (lockout warning, M+ completed)
+ [CHANGED] Profession & Crafting: 4 triggers (trade window, trade accepted, skill up)
+ [CHANGED] Economy & Mail: 7 triggers (mailbox, mail sent, pending mail, auction house)
+ [CHANGED] Pet & Mount: 2 triggers (pet battle start/end — MoP+)
+ [CHANGED] UI & System: 4 triggers (durability, bags, calendar invite, transmog — mixed versions)
 
-[TECHNICAL]
-- Version-gating schema: "all", {min=N}, {max=N}, {min=N, max=M}
-- IsTriggerAvailable(), GetAvailableTriggersInCategory(), IsCategoryAvailable() helpers
-- EventToTriggers lookup table for O(1) event dispatch
-- PlayTriggerSoundWithCooldown() replaces direct PlayTriggerSound() in event handler
-- Dynamic default fill in InitializeSettings() for seamless upgrades
-- unitFilter field for UNIT_SPELLCAST events (only fires for "player" unit)
+ [CHANGED] Version-gating schema: "all", {min=N}, {max=N}, {min=N, max=M}
+ [CHANGED] IsTriggerAvailable(), GetAvailableTriggersInCategory(), IsCategoryAvailable() helpers
+ [CHANGED] EventToTriggers lookup table for O(1) event dispatch
+ [CHANGED] PlayTriggerSoundWithCooldown() replaces direct PlayTriggerSound() in event handler
+ [CHANGED] Dynamic default fill in InitializeSettings() for seamless upgrades
+ [CHANGED] unitFilter field for UNIT_SPELLCAST events (only fires for "player" unit)
 
-═══════════════════════════════════════════════════════════
-Version 0.2.3 - Retail PvP Kill Tracking & Game Version Fix
-═══════════════════════════════════════════════════════════
+v0.2.3 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Retail 12.0+ PvP kill tracking using PARTY_KILL event
-- Achievement criteria workaround for hidden GUIDs in instanced PvP (BGs/Arenas)
-- Compares total killing blow count (achievement #1487) to detect YOUR kills
-- Open world: direct GUID comparison for precise detection
-- Added "Retail" to Game Version Detection
+ [NEW] Retail 12.0+ PvP kill tracking using PARTY_KILL event
+ [NEW] Achievement criteria workaround for hidden GUIDs in instanced PvP (BGs/Arenas)
+ [NEW] Compares total killing blow count (achievement #1487) to detect YOUR kills
+ [NEW] Open world: direct GUID comparison for precise detection
+ [NEW] Added "Retail" to Game Version Detection
 
-[TECHNICAL]
-- Classic: unchanged — still uses COMBAT_LOG_EVENT_UNFILTERED + PARTY_KILL subevent
-- Retail: PARTY_KILL event + GetAchievementCriteriaInfoByID(1487, 0) baseline
-- issecretvalue() check for hidden GUIDs in instanced PvP
-- Credit: ErnestasBaltinas/hksounds for the achievement criteria technique
+ [CHANGED] Classic: unchanged — still uses COMBAT_LOG_EVENT_UNFILTERED + PARTY_KILL subevent
+ [CHANGED] Retail: PARTY_KILL event + GetAchievementCriteriaInfoByID(1487, 0) baseline
+ [CHANGED] issecretvalue() check for hidden GUIDs in instanced PvP
+ [CHANGED] Credit: ErnestasBaltinas/hksounds for the achievement criteria technique
 
-═══════════════════════════════════════════════════════════
-Version 0.2.1.1 - Show Notifications setting
-═══════════════════════════════════════════════════════════
+v0.2.1.1 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Added "Show Notifications" checkbox to General settings (Interface section)
-- Controls whether chat messages are shown when sounds play
+ [NEW] Added "Show Notifications" checkbox to General settings (Interface section)
+ [NEW] Controls whether chat messages are shown when sounds play
 
-[CHANGED]
-- Default for ShowNotifications changed to false (hidden by default)
+ [CHANGED] Default for ShowNotifications changed to false (hidden by default)
 
-═══════════════════════════════════════════════════════════
-Version 0.2.1 - Version bump
-═══════════════════════════════════════════════════════════
+v0.2.1 - Release
+--------------------------------------------------------------------------------
 
-[IMPROVED]
-- Minimap tooltip reformatted to match iWR/iNIF style (Yellow/Orange colors, SetText, Status line)
-- Added L["StatusEnabled"], L["StatusDisabled"], L["MinimapTooltipStatus"] locale keys
+ [CHANGED] Minimap tooltip reformatted to match iWR/iNIF style (Yellow/Orange colors, SetText, Status line)
+ [CHANGED] Added L["StatusEnabled"], L["StatusDisabled"], L["MinimapTooltipStatus"] locale keys
 
-═══════════════════════════════════════════════════════════
-Version 0.1.7 - Combat Protection & ESC Close
-═══════════════════════════════════════════════════════════
+v0.1.7 - Release
+--------------------------------------------------------------------------------
 
-[IMPROVED]
-- Settings panel and Setup Guide auto-hide when entering combat
-- Setup Guide window now closes with ESC key (UISpecialFrames)
+ [CHANGED] Settings panel and Setup Guide auto-hide when entering combat
+ [CHANGED] Setup Guide window now closes with ESC key (UISpecialFrames)
 
-═══════════════════════════════════════════════════════════
-Version 0.1.6 - Localization (Minimap & Setup Guide)
-═══════════════════════════════════════════════════════════
+v0.1.6 - Release
+--------------------------------------------------------------------------------
 
-[IMPROVED]
-- Minimap tooltip text moved to locale tags (~6 strings)
-- Setup Guide text moved to locale tags (~12 strings: headers, steps, tips, buttons)
-- Minimap show/hide messages moved to locale tags
+ [CHANGED] Minimap tooltip text moved to locale tags (~6 strings)
+ [CHANGED] Setup Guide text moved to locale tags (~12 strings: headers, steps, tips, buttons)
+ [CHANGED] Minimap show/hide messages moved to locale tags
 
-═══════════════════════════════════════════════════════════
-Version 0.1.5 - Localization
-═══════════════════════════════════════════════════════════
+v0.1.5 - Release
+--------------------------------------------------------------------------------
 
-[IMPROVED]
-- Moved all hardcoded UI strings in options panel to locale tags (L["key"])
-- Added ~40 new locale keys for section headers, buttons, descriptions, and messages
-- Static popup dialogs, sounds tab, triggers tab, about tab, and other addons tabs all use L-tags
-- Consistent use of local L and Colors shortcuts throughout options panel
+ [CHANGED] Moved all hardcoded UI strings in options panel to locale tags (L["key"])
+ [CHANGED] Added ~40 new locale keys for section headers, buttons, descriptions, and messages
+ [CHANGED] Static popup dialogs, sounds tab, triggers tab, about tab, and other addons tabs all use L-tags
+ [CHANGED] Consistent use of local L and Colors shortcuts throughout options panel
 
-═══════════════════════════════════════════════════════════
-Version 0.1.4 - UI Consistency
-═══════════════════════════════════════════════════════════
+v0.1.4 - Release
+--------------------------------------------------------------------------------
 
-[FIXED]
-- Settings panel frame border now matches iWR/iNIF style (thinner border, correct insets)
-- Title bar text centered to match iWR/iNIF (was left-aligned with icon)
-- ESC key now closes settings panel via UISpecialFrames
-- Opening iSP settings now auto-closes iWR/iNIF settings panels if open
+ [FIX] Settings panel frame border now matches iWR/iNIF style (thinner border, correct insets)
+ [FIX] Title bar text centered to match iWR/iNIF (was left-aligned with icon)
+ [FIX] ESC key now closes settings panel via UISpecialFrames
+ [FIX] Opening iSP settings now auto-closes iWR/iNIF settings panels if open
 
-═══════════════════════════════════════════════════════════
-Version 0.1.2.0 - Setup Guide & First-Time Experience
-═══════════════════════════════════════════════════════════
+v0.1.2.0 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Added interactive Setup Guide window for first-time users
-- Setup guide automatically shows when no sounds are registered
-- Accessible via left-click on minimap icon
-- Step-by-step instructions for adding sounds and configuring triggers
-- "Don't show on startup" option for experienced users
-- Updated minimap tooltip (Left-click: Setup Guide, Right-click: Settings)
+ [NEW] Added interactive Setup Guide window for first-time users
+ [NEW] Setup guide automatically shows when no sounds are registered
+ [NEW] Accessible via left-click on minimap icon
+ [NEW] Step-by-step instructions for adding sounds and configuring triggers
+ [NEW] "Don't show on startup" option for experienced users
+ [NEW] Updated minimap tooltip (Left-click: Setup Guide, Right-click: Settings)
 
-[IMPROVED]
-- Better onboarding experience for new users
-- Clearer instructions on how to get started with the addon
+ [CHANGED] Better onboarding experience for new users
+ [CHANGED] Clearer instructions on how to get started with the addon
 
-═══════════════════════════════════════════════════════════
-Version 0.1.0 - Initial Release
-═══════════════════════════════════════════════════════════
+v0.1.0 - Release
+--------------------------------------------------------------------------------
 
-[NEW]
-- Initial addon structure created
-- Basic options panel with General and About tabs
-- Color scheme and styling framework
-- Slash commands (/isp, /isoundplayer)
-- Settings management system
-- Debug mode toggle
+ [NEW] Initial addon structure created
+ [NEW] Basic options panel with General and About tabs
+ [NEW] Color scheme and styling framework
+ [NEW] Slash commands (/isp, /isoundplayer)
+ [NEW] Settings management system
+ [NEW] Debug mode toggle
 
-[PLANNED]
-- Sound file management system
-- Trigger configuration
-- Event-based sound playback
-- MP3 file support
-- Custom trigger creation
-
-═══════════════════════════════════════════════════════════
+ [NEW] Sound file management system
+ [NEW] Trigger configuration
+ [NEW] Event-based sound playback
+ [NEW] MP3 file support
+ [NEW] Custom trigger creation
