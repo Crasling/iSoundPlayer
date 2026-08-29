@@ -1,4 +1,4 @@
-## Interface: 11506, 11508, 20505, 20506, 30405, 40401, 40402, 50503, 120001
+## Interface: 11506, 11508, 11509, 20505, 20506, 30405, 40401, 40402, 50503, 120001
 ## Title: |cffff9716iSoundPlayer |cFF00FF00v0.6.6|r
 ## Version: 0.6.6
 ## Notes: |cffff9716Custom Sound Player Addon|n|cFFFF0000Your game, your sounds.|r
